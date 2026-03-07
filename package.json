@@ -4,7 +4,7 @@
   "private": true,
   "description": "Monorepo: API Node.js (backend/) + Next.js frontend (frontend/)",
   "scripts": {
-    "build": "npm ci --include=dev --prefix backend && npm run build --prefix backend && npm ci --prefix frontend && npm run build --prefix frontend",
+    "build": "npm ci --prefix backend && npm run build --prefix backend && npm ci --prefix frontend && npm run build --prefix frontend",
     "start": "BACKEND_PORT=4000 node backend/dist/app.js & npm run start --prefix frontend",
     "dev": "npm run dev --prefix backend & npm run dev --prefix frontend"
   }
