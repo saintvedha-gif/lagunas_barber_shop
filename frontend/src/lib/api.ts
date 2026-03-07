@@ -226,3 +226,17 @@ export const ordersApi = {
       body: JSON.stringify({ estado }),
     }),
 };
+
+// ─── Settings ─────────────────────────────────────────────────────────────────
+export const settingsApi = {
+  getAll: (): Promise<Record<string, string>> =>
+    fetch(`${API_URL}/api/settings`, { next: { revalidate: 300 } })
+      .then((r) => handleResponse<Record<string, string>>(r)),
+
+  upsert: (clave: string, valor: string, token: string) =>
+    fetch(`${API_URL}/api/settings/${clave}`, {
+      method: "PUT",
+      headers: authHeaders(token),
+      body: JSON.stringify({ valor }),
+    }),
+};

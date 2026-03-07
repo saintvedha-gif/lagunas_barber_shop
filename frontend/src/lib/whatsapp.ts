@@ -1,8 +1,20 @@
 import type { CartItem } from "@/types";
 
-const TELEFONO = "573028326617";
+const TELEFONO_FALLBACK = "573028326617";
 
-export function enviarPedido(items: CartItem[]): void {
+/** Obtiene el número de WhatsApp desde la API (con fallback al valor original) */
+export async function fetchTelefono(): Promise<string> {
+  try {
+    const res = await fetch("/api/settings");
+    if (!res.ok) return TELEFONO_FALLBACK;
+    const data: Record<string, string> = await res.json();
+    return data["whatsapp_numero"]?.trim() || TELEFONO_FALLBACK;
+  } catch {
+    return TELEFONO_FALLBACK;
+  }
+}
+
+export function enviarPedido(items: CartItem[], telefono = TELEFONO_FALLBACK): void {
   const lineas = items.map((i) => {
     const variantes = [
       i.talla ? `Talla: ${i.talla}` : "",
@@ -28,7 +40,7 @@ export function enviarPedido(items: CartItem[]): void {
   ].join("\n");
 
   window.open(
-    `https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`,
+    `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`,
     "_blank"
   );
 }

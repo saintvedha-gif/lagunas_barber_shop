@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { X, Plus, Minus, Trash2, MessageCircle } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
-import { enviarPedido } from "@/lib/whatsapp";
+import { enviarPedido, fetchTelefono } from "@/lib/whatsapp";
 import { imgUrl } from "@/lib/api";
 
 interface Props {
@@ -40,9 +40,10 @@ export default function CartDrawer({ abierto, onCerrar }: Props) {
     return partes.length ? partes.join("-") : undefined;
   }
 
-  function handleEnviar() {
+  async function handleEnviar() {
     if (items.length === 0) return;
-    enviarPedido(items);
+    const telefono = await fetchTelefono();
+    enviarPedido(items, telefono);
   }
 
   return (

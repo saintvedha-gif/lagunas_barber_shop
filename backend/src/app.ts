@@ -10,6 +10,7 @@ import productRoutes  from './routes/product.routes';
 import categoryRoutes from './routes/category.routes';
 import barberRoutes   from './routes/barber.routes';
 import orderRoutes    from './routes/order.routes';
+import settingsRoutes from './routes/settings.routes';
 
 const app = express();
 const PORT = Number(process.env.BACKEND_PORT) || 4000;
@@ -39,6 +40,7 @@ app.use('/api/products',   productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/barber',     barberRoutes);
 app.use('/api/orders',     orderRoutes);
+app.use('/api/settings',   settingsRoutes);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

@@ -14,19 +14,22 @@ export const metadata: Metadata = {
 };
 
 async function fetchData() {
-  const [servRes, mediaRes] = await Promise.all([
+  const [servRes, mediaRes, settingsRes] = await Promise.all([
     fetch(`${API_URL}/api/barber/services`, { next: { revalidate: 120 } }),
     fetch(`${API_URL}/api/barber/media`,    { next: { revalidate: 120 } }),
+    fetch(`${API_URL}/api/settings`,        { next: { revalidate: 300 } }),
   ]);
 
   const servicios: BarberService[] = servRes.ok  ? await servRes.json()  : [];
   const media: BarberMedia[]        = mediaRes.ok ? await mediaRes.json() : [];
+  const settings: Record<string, string> = settingsRes.ok ? await settingsRes.json() : {};
+  const telefono = settings["whatsapp_numero"] || "573028326617";
 
-  return { servicios, media };
+  return { servicios, media, telefono };
 }
 
 export default async function BarberíaPage() {
-  const { servicios, media } = await fetchData();
+  const { servicios, media, telefono } = await fetchData();
 
   return (
     <div className="min-h-screen bg-black pt-20">
@@ -58,7 +61,7 @@ export default async function BarberíaPage() {
           </p>
 
           <a
-            href="https://wa.me/573028326617?text=Hola%2C%20quiero%20reservar%20un%20turno%20en%20Laguna%27s%20Barber%20%26%20Shop"
+            href={`https://wa.me/${telefono}?text=Hola%2C%20quiero%20reservar%20un%20turno%20en%20Laguna%27s%20Barber%20%26%20Shop`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 bg-[#25d366] text-black font-semibold px-8 py-3 rounded-full hover:bg-[#1eb958] transition-colors uppercase tracking-wider text-sm"
