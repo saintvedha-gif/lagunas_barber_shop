@@ -261,13 +261,15 @@ export default function ProductForm({ categorias, token, producto }: Props) {
     const p = producto.imagenes.find((i) => i.esPortada);
     return p ? `existing-${p._id}` : "";
   });
+  const [imgActuales, setImgActuales] = useState(producto?.imagenes ?? []);
+  const [deletingImgId, setDeletingImgId] = useState<string | null>(null);
   const [grupos, setGrupos] = useState<GrupoColor[]>([{ colorHex: "#000000", colorNombre: "", archivos: [], previews: [] }]);
   const fileRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const catsFiltradas          = categorias.filter((c) => c.seccion === seccion);
   const categoriaNombrePreview = catsFiltradas.find((c) => c._id === previewCatId)?.nombre ?? "";
   const tallasArray            = previewTallas.split(",").map((t) => t.trim()).filter(Boolean);
-  const existingImages         = (producto?.imagenes ?? []).map((img) => ({
+  const existingImages         = imgActuales.map((img) => ({
     url: imgUrl(img.nombreArchivo),
     color: img.color,
   }));
@@ -275,19 +277,19 @@ export default function ProductForm({ categorias, token, producto }: Props) {
   const portadaPreviewIdx = useMemo(() => {
     if (portadaKey.startsWith("existing-")) {
       const id = portadaKey.slice("existing-".length);
-      const i = (producto?.imagenes ?? []).findIndex((img) => img._id === id);
+      const i = imgActuales.findIndex((img) => img._id === id);
       return i >= 0 ? i : 0;
     }
     if (portadaKey.startsWith("new-")) {
       const [, gStr, iStr] = portadaKey.split("-");
       const tg = parseInt(gStr, 10);
       const ti = parseInt(iStr, 10);
-      let offset = (producto?.imagenes ?? []).length;
+      let offset = imgActuales.length;
       for (let gi = 0; gi < tg && gi < grupos.length; gi++) offset += grupos[gi].previews.length;
       return offset + ti;
     }
     return 0;
-  }, [portadaKey, grupos, producto]);
+  }, [portadaKey, grupos, imgActuales]);
 
   const previewData: PreviewData = {
     nombre: previewNombre,
@@ -302,6 +304,21 @@ export default function ProductForm({ categorias, token, producto }: Props) {
     existingImages,
     portadaPreviewIdx,
   };
+
+  async function eliminarImagenExistente(imgId: string) {
+    if (!producto || deletingImgId) return;
+    setDeletingImgId(imgId);
+    try {
+      const res = await productsApi.deleteImage(producto._id, imgId, token);
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "Error");
+      setImgActuales((prev) => prev.filter((img) => img._id !== imgId));
+      if (portadaKey === `existing-${imgId}`) setPortadaKey("");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error al eliminar imagen.");
+    } finally {
+      setDeletingImgId(null);
+    }
+  }
 
   function agregarGrupo() {
     setGrupos((g) => [...g, { colorHex: "#000000", colorNombre: "", archivos: [], previews: [] }]);
@@ -600,49 +617,63 @@ export default function ProductForm({ categorias, token, producto }: Props) {
             </section>
 
             {/* Imágenes existentes — solo edición */}
-            {isEdit && producto!.imagenes.length > 0 && (
+            {isEdit && imgActuales.length > 0 && (
               <section className="space-y-3">
                 <h3 className={labelCls}>Imágenes actuales</h3>
                 <div className="flex flex-wrap gap-3">
-                  {producto!.imagenes.map((img) => {
+                  {imgActuales.map((img) => {
                     const isPortada = portadaKey === `existing-${img._id}`;
+                    const isDeleting = deletingImgId === img._id;
                     return (
-                      <button
-                        key={img._id}
-                        type="button"
-                        onClick={() => setPortadaKey(`existing-${img._id}`)}
-                        title={isPortada ? "Portada actual" : "Establecer como portada"}
-                        className={[
-                          "relative rounded-xl overflow-hidden shrink-0 transition-all",
-                          isPortada ? "ring-2 ring-amber-400" : "ring-1 ring-white/10 hover:ring-white/40",
-                        ].join(" ")}
-                      >
-                        <div className="relative w-20 h-20">
-                          <Image
-                            src={imgUrl(img.nombreArchivo)}
-                            alt=""
-                            fill
-                            className="object-cover"
-                            sizes="80px"
-                          />
-                          {isPortada && (
-                            <div className="absolute inset-0 bg-black/45 flex items-center justify-center">
-                              <Crown size={16} className="text-amber-400" />
-                            </div>
-                          )}
-                        </div>
+                      <div key={img._id} className="relative group/img shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setPortadaKey(`existing-${img._id}`)}
+                          title={isPortada ? "Portada actual" : "Establecer como portada"}
+                          className={[
+                            "relative rounded-xl overflow-hidden transition-all",
+                            isPortada ? "ring-2 ring-amber-400" : "ring-1 ring-white/10 hover:ring-white/40",
+                          ].join(" ")}
+                        >
+                          <div className="relative w-20 h-20 bg-[#111]">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={imgUrl(img.nombreArchivo)}
+                              alt=""
+                              className="w-full h-full object-cover"
+                              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                            />
+                            {isPortada && (
+                              <div className="absolute inset-0 bg-black/45 flex items-center justify-center">
+                                <Crown size={16} className="text-amber-400" />
+                              </div>
+                            )}
+                          </div>
+                        </button>
+                        {/* Botón eliminar */}
+                        <button
+                          type="button"
+                          onClick={() => eliminarImagenExistente(img._id)}
+                          disabled={isDeleting}
+                          className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 hover:bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity z-10 disabled:opacity-40"
+                          title="Eliminar imagen"
+                        >
+                          {isDeleting
+                            ? <Loader2 size={10} className="animate-spin text-white" />
+                            : <Trash2 size={10} className="text-white" />}
+                        </button>
                         {img.color && (
                           <span className="block text-[10px] text-gray-600 text-center mt-0.5 truncate w-20 px-1">
                             {img.color}
                           </span>
                         )}
-                      </button>
+                      </div>
                     );
                   })}
                 </div>
                 <p className="text-[11px] text-gray-600 flex items-center gap-1.5">
                   <Crown size={9} className="text-amber-500/80" />
-                  Toca una imagen para marcarla como portada
+                  Toca una imagen para marcarla como portada · Pasa el cursor para eliminar
                 </p>
               </section>
             )}
