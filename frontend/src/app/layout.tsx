@@ -1,5 +1,3 @@
-import Footer from "@/components/layout/Footer"
-import Navbar from "@/components/layout/Navbar"
 import Providers from "@/components/Providers"
 import type { Metadata } from "next"
 import { Bebas_Neue, Roboto } from "next/font/google"
@@ -35,9 +33,7 @@ export default function RootLayout({
     <html lang="es" className={`${bebasNeue.variable} ${roboto.variable}`}>
       <body className="antialiased">
         <Providers>
-          <Navbar />
-          <main>{children}</main>
-          <Footer />
+          {children}
         </Providers>
       </body>
     </html>
