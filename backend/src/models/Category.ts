@@ -6,13 +6,15 @@ export interface ICategory extends Document {
   nombre: string;
   seccion: Seccion;
   activa: boolean;
+  subcategorias: string[];
 }
 
 const categorySchema = new Schema<ICategory>(
   {
-    nombre:  { type: String, required: true, unique: true, trim: true, maxlength: 80 },
-    seccion: { type: String, enum: ['ropa', 'cosmetico'], required: true },
-    activa:  { type: Boolean, default: true },
+    nombre:        { type: String, required: true, unique: true, trim: true, maxlength: 80 },
+    seccion:       { type: String, enum: ['ropa', 'cosmetico'], required: true },
+    activa:        { type: Boolean, default: true },
+    subcategorias: { type: [String], default: [] },
   },
   { versionKey: false }
 );

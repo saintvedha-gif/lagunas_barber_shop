@@ -21,10 +21,13 @@ export default async function CategoriasPage() {
   const cosmetico = categorias.filter((c) => c.seccion === "cosmetico");
 
   return (
-    <div className="space-y-8 pb-20 md:pb-6 max-w-2xl">
-      <h1 className="font-display text-3xl tracking-widest text-white">
-        CATEGORÍAS
-      </h1>
+    <div className="space-y-6 pb-20 md:pb-6 max-w-2xl">
+      <div>
+        <h1 className="font-display text-3xl tracking-widest text-white">CATEGORÍAS</h1>
+        <p className="text-sm text-gray-500 mt-1">
+          Gestiona las categorías y subcategorías de los productos.
+        </p>
+      </div>
       <CategoryManager
         ropaCategories={ropa}
         cosmeticoCategories={cosmetico}

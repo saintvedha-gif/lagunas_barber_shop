@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <section
-      className="relative min-h-screen flex items-center justify-center"
+      className="relative min-h-screen flex items-center justify-center pb-24 sm:pb-0"
       style={{
         backgroundImage: "url('/img/fondo_barber.jpeg')",
         backgroundSize: "cover",

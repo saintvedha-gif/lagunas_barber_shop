@@ -21,27 +21,55 @@ export default function Navbar() {
   const pathname        = usePathname();
   const [open, setOpen] = useState(false);
   const isShop          = pathname === "/ropa" || pathname === "/cosmeticos";
+  const isHome          = pathname === "/";
 
-  // Bloquear scroll del body cuando el drawer está abierto
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [open]);
 
+  // Fondo del navbar:
+  // - Inicio mobile:  siempre transparente (el hero ya tiene logo)
+  // - Inicio desktop: degradado → sólido al hacer scroll
+  // - Otras rutas:    siempre sólido (mobile + desktop)
+  const navBg = isHome
+    ? scrolled
+      ? "md:bg-black/90 md:backdrop-blur-md md:shadow-lg md:shadow-black/40"
+      : "md:bg-linear-to-b md:from-black/60 md:to-transparent"
+    : scrolled
+      ? "bg-black/90 backdrop-blur-md shadow-lg shadow-black/40"
+      : "bg-black/95 backdrop-blur-sm";
+
   return (
     <>
-      <nav
-        className={[
-          "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-          scrolled
-            ? "bg-black/90 backdrop-blur-md shadow-lg shadow-black/40"
-            : "bg-linear-to-b from-black/60 to-transparent",
-        ].join(" ")}
-      >
-        <div className="max-w-6xl mx-auto px-5 flex items-center justify-between h-17">
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${navBg}`}>
 
-          {/* Logo + nombre — oculto en móvil (se muestra en hero) */}
-          <Link href="/" className="hidden sm:flex items-center gap-2.5 group shrink-0">
+        {/* Logo centrado — solo mobile en rutas que no son / */}
+        {!isHome && (
+          <div className="md:hidden absolute inset-0 flex items-center justify-center pointer-events-none">
+            <Link
+              href="/"
+              onClick={() => setOpen(false)}
+              className="pointer-events-auto flex items-center gap-2 group"
+            >
+              <Image
+                src="/img/logo-artguru.png"
+                alt="Laguna's"
+                width={28}
+                height={28}
+                className="object-contain transition-transform duration-200 group-hover:scale-105"
+              />
+              <span className="font-display text-sm tracking-[0.18em] text-white leading-none">
+                LAGUNA&apos;S
+              </span>
+            </Link>
+          </div>
+        )}
+
+        <div className="max-w-6xl mx-auto px-5 flex items-center h-17">
+
+          {/* Logo izquierda — solo desktop */}
+          <Link href="/" className="hidden md:flex items-center gap-2.5 group shrink-0">
             <Image
               src="/img/logo-artguru.png"
               alt="Laguna's Barber & Shop"
@@ -50,13 +78,13 @@ export default function Navbar() {
               className="object-contain transition-transform duration-200 group-hover:scale-105"
               priority
             />
-            <span className="hidden sm:block font-display text-base tracking-[0.18em] text-white leading-none">
+            <span className="font-display text-base tracking-[0.18em] text-white leading-none">
               LAGUNA&apos;S
             </span>
           </Link>
 
-          {/* Links escritorio */}
-          <ul className="hidden md:flex items-center gap-1">
+          {/* Links centrados — solo desktop */}
+          <ul className="hidden md:flex flex-1 items-center justify-center gap-1">
             {NAV_LINKS.map((link) => {
               const active = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
               return (
@@ -77,9 +105,8 @@ export default function Navbar() {
             })}
           </ul>
 
-          {/* Derecha: carrito + hamburguesa */}
-          <div className="flex items-center gap-2">
-            {/* Carrito — visible en páginas de tienda */}
+          {/* Derecha: carrito */}
+          <div className="flex items-center gap-2 ml-auto">
             {isShop && (
               <button
                 id="cart-toggle"
@@ -94,8 +121,6 @@ export default function Navbar() {
                 )}
               </button>
             )}
-
-            {/* Hamburguesa — sólo escritorio (md+); en móvil se usa el FAB flotante) */}
           </div>
         </div>
       </nav>

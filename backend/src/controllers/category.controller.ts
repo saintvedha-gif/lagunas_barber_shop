@@ -66,6 +66,34 @@ export async function updateCategory(req: Request, res: Response): Promise<void>
   }
 }
 
+// POST /api/categories/:id/subcategorias
+export async function addSubcategoria(req: Request, res: Response): Promise<void> {
+  const { nombre } = req.body as { nombre?: string };
+  if (!nombre?.trim()) {
+    res.status(400).json({ error: 'El nombre es obligatorio.' });
+    return;
+  }
+  const categoria = await Category.findByIdAndUpdate(
+    req.params['id'],
+    { $addToSet: { subcategorias: nombre.trim() } },
+    { new: true }
+  );
+  if (!categoria) { res.status(404).json({ error: 'Categoría no encontrada.' }); return; }
+  res.json(categoria);
+}
+
+// DELETE /api/categories/:id/subcategorias/:nombre
+export async function removeSubcategoria(req: Request, res: Response): Promise<void> {
+  const nombre = decodeURIComponent(req.params['nombre']);
+  const categoria = await Category.findByIdAndUpdate(
+    req.params['id'],
+    { $pull: { subcategorias: nombre } },
+    { new: true }
+  );
+  if (!categoria) { res.status(404).json({ error: 'Categoría no encontrada.' }); return; }
+  res.json(categoria);
+}
+
 // DELETE /api/categories/:id
 export async function deleteCategory(req: Request, res: Response): Promise<void> {
   const totalProductos = await Product.countDocuments({ categoria: req.params['id'] });

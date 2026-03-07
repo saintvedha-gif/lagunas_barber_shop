@@ -111,6 +111,19 @@ export const categoriesApi = {
       method: "DELETE",
       headers: authHeaders(token),
     }),
+
+  addSubcategoria: (id: string, nombre: string, token: string) =>
+    fetch(`${API_URL}/api/categories/${id}/subcategorias`, {
+      method: "POST",
+      headers: authHeaders(token),
+      body: JSON.stringify({ nombre }),
+    }),
+
+  removeSubcategoria: (id: string, nombre: string, token: string) =>
+    fetch(`${API_URL}/api/categories/${id}/subcategorias/${encodeURIComponent(nombre)}`, {
+      method: "DELETE",
+      headers: authHeaders(token),
+    }),
 };
 
 // ─── Barbería ─────────────────────────────────────────────────────────────────

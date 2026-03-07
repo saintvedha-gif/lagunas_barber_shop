@@ -7,6 +7,7 @@ export interface Category {
   seccion: "ropa" | "cosmetico";
   activa: boolean;
   creadaEn: string;
+  subcategorias: string[];
   // solo presente con /api/categories/with-count
   totalProductos?: number;
 }
