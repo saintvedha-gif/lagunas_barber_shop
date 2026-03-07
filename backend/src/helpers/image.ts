@@ -14,6 +14,8 @@ export async function saveImageToDb(
   originalName: string,
   mimeType: string,
 ): Promise<string> {
+  console.log('[saveImageToDb] Inicio:', { originalName, mimeType, bufferSize: buffer.length });
+
   // Videos: guardar tal cual sin procesar con sharp
   if (mimeType.startsWith('video/')) {
     const doc = await ImageFile.create({
@@ -22,14 +24,17 @@ export async function saveImageToDb(
       originalName,
       size: buffer.length,
     });
+    console.log('[saveImageToDb] Video guardado, _id:', String(doc._id));
     return String(doc._id);
   }
 
   // Imágenes: optimizar con sharp → webp
+  console.log('[saveImageToDb] Procesando con sharp...');
   const optimized = await sharp(buffer)
     .resize(MAX_WIDTH, MAX_HEIGHT, { fit: 'inside', withoutEnlargement: true })
     .webp({ quality: QUALITY })
     .toBuffer();
+  console.log('[saveImageToDb] Sharp OK, tamaño optimizado:', optimized.length);
 
   const doc = await ImageFile.create({
     data: optimized,
@@ -37,6 +42,7 @@ export async function saveImageToDb(
     originalName,
     size: optimized.length,
   });
+  console.log('[saveImageToDb] Guardado en MongoDB, _id:', String(doc._id));
 
   return String(doc._id);
 }

@@ -57,10 +57,12 @@ export async function createProduct(req: Request, res: Response, next: NextFunct
     }
 
     const files = (req.files as Express.Multer.File[]) || [];
+    console.log('[createProduct] files recibidos:', files.length, files.map(f => ({ name: f.originalname, size: f.size, mime: f.mimetype, hasBuffer: !!f.buffer })));
     const portadaIdx = parseInt(req.body.portadaIdx ?? '0', 10);
     const imagenes: IProductImage[] = [];
     for (let idx = 0; idx < files.length; idx++) {
       const file = files[idx];
+      console.log('[createProduct] Guardando imagen', idx, file.originalname);
       const imgId = await saveImageToDb(file.buffer, file.originalname, file.mimetype);
       imagenes.push({
         _id:           new Types.ObjectId(),
