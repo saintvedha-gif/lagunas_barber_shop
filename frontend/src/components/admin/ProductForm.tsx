@@ -6,7 +6,7 @@ import Image from "next/image";
 import {
   Plus, Trash2, Loader2, ShoppingCart,
   AlertTriangle, ImageIcon, Tag, Package,
-  Eye, FileText,
+  Eye, FileText, Pipette,
 } from "lucide-react";
 import { imgUrl, productsApi } from "@/lib/api";
 import type { Category, Product } from "@/types";
@@ -18,7 +18,8 @@ interface Props {
 }
 
 interface GrupoColor {
-  color: string;
+  colorHex: string;    // hex del picker (visual, para el swatch)
+  colorNombre: string; // nombre legible (lo que se envía al backend)
   archivos: File[];
   previews: string[];
 }
@@ -48,22 +49,23 @@ function ProductPreviewCard({
 
   const allImages = useMemo(() => [
     ...existingImages,
-    ...grupos.flatMap((g) => g.previews.map((url) => ({ url, color: g.color || null }))),
+    ...grupos.flatMap((g) => g.previews.map((url) => ({ url, color: g.colorNombre || g.colorHex || null }))),
   ], [existingImages, grupos]);
 
   const colores = useMemo(() => {
     const seen = new Set<string>();
-    const list: { label: string; isHex: boolean }[] = [];
+    const list: { label: string; hex: string }[] = [];
     grupos.forEach((g) => {
-      if (g.color && !seen.has(g.color)) {
-        seen.add(g.color);
-        list.push({ label: g.color, isHex: g.color.startsWith("#") });
+      const label = g.colorNombre || g.colorHex;
+      if (label && !seen.has(label)) {
+        seen.add(label);
+        list.push({ label, hex: g.colorHex });
       }
     });
     existingImages.forEach((i) => {
       if (i.color && !seen.has(i.color)) {
         seen.add(i.color);
-        list.push({ label: i.color, isHex: i.color.startsWith("#") });
+        list.push({ label: i.color, hex: i.color.startsWith("#") ? i.color : "" });
       }
     });
     return list;
@@ -177,7 +179,7 @@ function ProductPreviewCard({
                   "w-5 h-5 rounded-full border-2 transition-all duration-150 shrink-0",
                   safeIdx === i ? "border-white scale-110" : "border-transparent hover:scale-105",
                 ].join(" ")}
-                style={c.isHex ? { backgroundColor: c.label } : { background: "conic-gradient(red,yellow,green,blue,red)" }}
+                style={c.hex ? { backgroundColor: c.hex } : c.label ? { backgroundColor: c.label } : { background: "conic-gradient(red,yellow,green,blue,red)" }}
               />
             ))}
           </div>
@@ -252,7 +254,7 @@ export default function ProductForm({ categorias, token, producto }: Props) {
       ? producto?.categoria?._id ?? ""
       : producto?.categoria ?? ""
   );
-  const [grupos, setGrupos] = useState<GrupoColor[]>([{ color: "", archivos: [], previews: [] }]);
+  const [grupos, setGrupos] = useState<GrupoColor[]>([{ colorHex: "#000000", colorNombre: "", archivos: [], previews: [] }]);
   const fileRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const catsFiltradas          = categorias.filter((c) => c.seccion === seccion);
@@ -277,7 +279,7 @@ export default function ProductForm({ categorias, token, producto }: Props) {
   };
 
   function agregarGrupo() {
-    setGrupos((g) => [...g, { color: "", archivos: [], previews: [] }]);
+    setGrupos((g) => [...g, { colorHex: "#000000", colorNombre: "", archivos: [], previews: [] }]);
   }
   function removerGrupo(idx: number) {
     grupos[idx]?.previews.forEach((url) => URL.revokeObjectURL(url));
@@ -319,7 +321,7 @@ export default function ProductForm({ categorias, token, producto }: Props) {
     for (const grupo of grupos) {
       for (const archivo of grupo.archivos) {
         fd.append("imagenes", archivo);
-        fd.append(`color_${idx}`, grupo.color);
+        fd.append(`color_${idx}`, grupo.colorNombre || grupo.colorHex);
         idx++;
       }
     }
@@ -593,15 +595,37 @@ export default function ProductForm({ categorias, token, producto }: Props) {
                 {grupos.map((grupo, gIdx) => (
                   <div key={gIdx} className="border border-white/8 rounded-2xl p-4 space-y-3 bg-[#111]">
                     <div className="flex items-center gap-2">
-                      <div
-                        className="w-6 h-6 rounded-full border border-white/20 shrink-0"
-                        style={grupo.color.startsWith("#") ? { backgroundColor: grupo.color } : { background: grupo.color ? "#555" : "#222" }}
-                      />
+                      {/* Círculo = color picker — click para elegir */}
+                      <label
+                        className="cursor-pointer shrink-0 relative group/cpicker"
+                        title="Elegir color"
+                      >
+                        <div
+                          className="w-8 h-8 rounded-full border-2 border-white/25 transition-all group-hover/cpicker:scale-110 group-hover/cpicker:border-white/60"
+                          style={{ backgroundColor: grupo.colorHex || "#1a1a1a" }}
+                        />
+                        <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-[#222] border border-white/20 rounded-full flex items-center justify-center pointer-events-none">
+                          <Pipette size={8} className="text-gray-300" />
+                        </span>
+                        <input
+                          type="color"
+                          value={grupo.colorHex || "#000000"}
+                          onChange={(e) => {
+                            const hex = e.target.value;
+                            setGrupos((g) =>
+                              g.map((gr, i) =>
+                                i === gIdx ? { ...gr, colorHex: hex, colorNombre: hex } : gr
+                              )
+                            );
+                          }}
+                          className="sr-only"
+                        />
+                      </label>
                       <input
-                        placeholder="Color (ej. Negro, Rojo, #FF0000)"
-                        value={grupo.color}
+                        placeholder="Nombre del color (ej. Negro, Azul marino)"
+                        value={grupo.colorNombre}
                         onChange={(e) =>
-                          setGrupos((g) => g.map((gr, i) => (i === gIdx ? { ...gr, color: e.target.value } : gr)))
+                          setGrupos((g) => g.map((gr, i) => (i === gIdx ? { ...gr, colorNombre: e.target.value } : gr)))
                         }
                         className="flex-1 bg-transparent border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs focus:outline-none focus:border-white/40 transition-colors placeholder:text-gray-700"
                       />

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import Image from "next/image";
-import { ShoppingCart, AlertTriangle, ChevronDown } from "lucide-react";
+import { ShoppingCart, AlertTriangle } from "lucide-react";
 import { imgUrl } from "@/lib/api";
 import { useCart } from "@/hooks/useCart";
 import type { Product, ProductImage } from "@/types";
@@ -193,27 +193,26 @@ export default function RopaCard({ producto }: Props) {
           </div>
         )}
 
-        {/* Select de tallas */}
+        {/* Tags de tallas */}
         {producto.tallas.length > 0 && (
-          <div className="relative">
-            <select
-              value={tallaSeleccionada}
-              onChange={(e) => setTallaSeleccionada(e.target.value)}
-              className="w-full appearance-none bg-[#111] border border-white/20 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-white/50 transition-colors pr-7"
-            >
-              <option value="" disabled>
-                Seleccionar talla
-              </option>
-              {producto.tallas.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-            <ChevronDown
-              size={14}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-            />
+          <div className="flex flex-wrap gap-1.5">
+            {producto.tallas.map((t) => (
+              <button
+                key={t}
+                onClick={() => setTallaSeleccionada(tallaSeleccionada === t ? "" : t)}
+                disabled={producto.stock === 0}
+                aria-pressed={tallaSeleccionada === t}
+                className={[
+                  "px-2.5 py-1 text-[11px] font-semibold rounded-lg border transition-all duration-150 leading-none",
+                  tallaSeleccionada === t
+                    ? "bg-white text-black border-white"
+                    : "bg-transparent text-gray-400 border-white/20 hover:border-white/50 hover:text-white",
+                  producto.stock === 0 ? "opacity-40 cursor-not-allowed" : "cursor-pointer",
+                ].join(" ")}
+              >
+                {t}
+              </button>
+            ))}
           </div>
         )}
 
