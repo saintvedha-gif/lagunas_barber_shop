@@ -15,9 +15,12 @@ export const API_URL =
     ? cleanUrl(process.env.API_URL, "http://localhost:4000")
     : cleanUrl(process.env.NEXT_PUBLIC_API_URL, "");
 
-/** Devuelve la URL completa de un archivo subido al backend */
+/** Devuelve la URL de un archivo subido.
+ *  Siempre relativa (/uploads/…) para que funcione con los rewrites
+ *  tanto en SSR como en el cliente — evita que Next.js Image intente
+ *  optimizar http://localhost:4000/… en producción. */
 export function imgUrl(nombreArchivo: string): string {
-  return `${API_URL}/uploads/${nombreArchivo}`;
+  return `/uploads/${nombreArchivo}`;
 }
 
 /** Convierte una URL de YouTube a su versión embed */

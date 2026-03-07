@@ -9,8 +9,9 @@ const nextConfig: NextConfig = {
     viewTransition: true,
   },
   images: {
+    // Las imágenes se sirven como rutas relativas (/uploads/…) vía rewrites,
+    // así que no se necesitan remotePatterns en producción.
     remotePatterns: [
-      // Solo necesario en desarrollo local
       {
         protocol: "http",
         hostname: "localhost",
