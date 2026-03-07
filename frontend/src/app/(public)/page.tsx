@@ -37,6 +37,20 @@ export default function HomePage() {
 
       {/* Contenido */}
       <div className="relative z-10 flex flex-col items-center text-center px-4">
+
+        {/* Logo dorado visible solo en móvil — sobre el título */}
+        <div className="sm:hidden mb-5">
+          <Image
+            src="/img/logo-artguru.png"
+            alt="Laguna's"
+            width={96}
+            height={96}
+            className="object-contain drop-shadow-[0_0_18px_rgba(212,175,55,0.55)]"
+            style={{ filter: "sepia(1) saturate(3.5) hue-rotate(8deg) brightness(1.1)" }}
+            priority
+          />
+        </div>
+
         <h1 className="font-display text-5xl md:text-7xl lg:text-8xl text-white tracking-[0.15em] mb-4 drop-shadow-lg">
           LAGUNA&apos;S
         </h1>

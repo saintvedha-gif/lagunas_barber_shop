@@ -40,8 +40,8 @@ export default function Navbar() {
       >
         <div className="max-w-6xl mx-auto px-5 flex items-center justify-between h-17">
 
-          {/* Logo + nombre */}
-          <Link href="/" className="flex items-center gap-2.5 group shrink-0">
+          {/* Logo + nombre — oculto en móvil (se muestra en hero) */}
+          <Link href="/" className="hidden sm:flex items-center gap-2.5 group shrink-0">
             <Image
               src="/img/logo-artguru.png"
               alt="Laguna's Barber & Shop"
@@ -95,17 +95,44 @@ export default function Navbar() {
               </button>
             )}
 
-            {/* Hamburguesa móvil */}
-            <button
-              className="md:hidden flex items-center justify-center w-10 h-10 rounded-full text-white hover:bg-white/10 transition-colors"
-              aria-label={open ? "Cerrar menú" : "Abrir menú"}
-              onClick={() => setOpen((v) => !v)}
-            >
-              {open ? <X size={20} /> : <Menu size={20} />}
-            </button>
+            {/* Hamburguesa — sólo escritorio (md+); en móvil se usa el FAB flotante) */}
           </div>
         </div>
       </nav>
+
+      {/* FAB hamburguesa — sólo móvil, flotante en esquina inferior-derecha */}
+      <button
+        className={[
+          "md:hidden fixed bottom-6 right-5 z-50",
+          "w-14 h-14 rounded-full",
+          "flex items-center justify-center",
+          "transition-all duration-300 ease-out",
+          open
+            ? "bg-[#1c1c1c] border border-white/20 scale-105 shadow-[0_8px_32px_rgba(0,0,0,0.7),0_0_0_4px_rgba(255,255,255,0.06)]"
+            : "bg-white scale-100 shadow-[0_8px_24px_rgba(0,0,0,0.5)]",
+        ].join(" ")}
+        onClick={() => setOpen((v) => !v)}
+        aria-label={open ? "Cerrar menú" : "Abrir menú"}
+      >
+        <span className="relative w-6 h-6 flex items-center justify-center">
+          {/* Icono Menu */}
+          <Menu
+            size={22}
+            className={[
+              "absolute transition-all duration-300 ease-out text-black",
+              open ? "opacity-0 rotate-90 scale-50" : "opacity-100 rotate-0 scale-100",
+            ].join(" ")}
+          />
+          {/* Icono X */}
+          <X
+            size={22}
+            className={[
+              "absolute transition-all duration-300 ease-out text-white",
+              open ? "opacity-100 rotate-0 scale-100" : "opacity-0 -rotate-90 scale-50",
+            ].join(" ")}
+          />
+        </span>
+      </button>
 
       {/* Overlay móvil */}
       {open && (

@@ -22,6 +22,10 @@ export const metadata: Metadata = {
   description:
     "Barbería y tienda de ropa y cosméticos capilares en Cali. Cortes profesionales, ropa urbana y productos de calidad.",
   keywords: ["barbería", "ropa", "cosméticos", "Cali", "Laguna's"],
+  icons: {
+    icon: "/img/logo-artguru.png",
+    apple: "/img/logo-artguru.png",
+  },
 }
 
 export default function RootLayout({
