@@ -36,11 +36,11 @@ export default async function EditarProductoPage({
   if (!data) notFound();
 
   return (
-    <div className="space-y-6 pb-20 md:pb-6">
-      <h1 className="font-display text-3xl tracking-widest text-white">
-        EDITAR PRODUCTO
-      </h1>
-      <p className="text-gray-400 text-sm">{data.producto.nombre}</p>
+    <div className="space-y-4 pb-20 md:pb-8">
+      <div>
+        <h1 className="font-display text-3xl tracking-widest text-white">EDITAR PRODUCTO</h1>
+        <p className="text-sm text-gray-500 mt-0.5">{data.producto.nombre}</p>
+      </div>
       <ProductForm
         categorias={data.categorias}
         token={token}

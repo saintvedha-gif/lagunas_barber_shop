@@ -18,10 +18,11 @@ export default async function NuevoProductoPage() {
   const categorias = await fetchCategorias(token);
 
   return (
-    <div className="space-y-6 pb-20 md:pb-6">
-      <h1 className="font-display text-3xl tracking-widest text-white">
-        NUEVO PRODUCTO
-      </h1>
+    <div className="space-y-6 pb-20 md:pb-8">
+      <div>
+        <h1 className="font-display text-3xl tracking-widest text-white">NUEVO PRODUCTO</h1>
+        <p className="text-sm text-gray-500 mt-1">Completa el formulario. La vista previa se actualiza en tiempo real.</p>
+      </div>
       <ProductForm categorias={categorias} token={token} />
     </div>
   );
