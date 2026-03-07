@@ -60,11 +60,12 @@ export async function createProduct(req: Request, res: Response, next: NextFunct
     }
 
     const files = (req.files as Express.Multer.File[]) || [];
+    const portadaIdx = parseInt(req.body.portadaIdx ?? '0', 10);
     const imagenes: IProductImage[] = files.map((file, idx) => ({
       _id:           new Types.ObjectId(),
       nombreArchivo: file.filename,
       color:         req.body[`color_${idx}`] || null,
-      esPortada:     idx === 0,
+      esPortada:     idx === portadaIdx,
       orden:         idx,
     }));
 
@@ -106,15 +107,27 @@ export async function updateProduct(req: Request, res: Response, next: NextFunct
     if (colores)  producto.colores = colores.split(',').map((c: string) => c.trim()).filter(Boolean);
     if (descripcion !== undefined) producto.descripcion = descripcion?.trim() || undefined;
 
+    const portadaExistenteId = (req.body.portadaExistenteId as string | undefined) || "";
+    const portadaIdxRaw = req.body.portadaIdx as string | undefined;
+    const portadaIdx = portadaIdxRaw !== undefined && portadaIdxRaw !== ""
+      ? parseInt(portadaIdxRaw, 10) : null;
+    if (portadaExistenteId || portadaIdx !== null) {
+      producto.imagenes.forEach(img => { img.esPortada = false; });
+      if (portadaExistenteId) {
+        const portadaImg = producto.imagenes.find(i => String(i._id) === portadaExistenteId);
+        if (portadaImg) portadaImg.esPortada = true;
+      }
+    }
     const files = (req.files as Express.Multer.File[]) || [];
     const hayPortada = producto.imagenes.some(img => img.esPortada);
+    const baseLen = producto.imagenes.length;
     files.forEach((file, idx) => {
       producto.imagenes.push({
         _id:           new Types.ObjectId(),
         nombreArchivo: file.filename,
         color:         req.body[`color_${idx}`] || null,
-        esPortada:     !hayPortada && idx === 0,
-        orden:         producto.imagenes.length + idx,
+        esPortada:     portadaIdx !== null ? idx === portadaIdx : (!hayPortada && idx === 0),
+        orden:         baseLen + idx,
       });
     });
 

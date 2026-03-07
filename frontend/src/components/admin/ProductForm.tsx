@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   Plus, Trash2, Loader2, ShoppingCart,
   AlertTriangle, ImageIcon, Tag, Package,
-  Eye, FileText, Pipette,
+  Eye, FileText, Pipette, Crown,
 } from "lucide-react";
 import { imgUrl, productsApi } from "@/lib/api";
 import type { Category, Product } from "@/types";
@@ -35,6 +35,7 @@ interface PreviewData {
   categoriaNombre: string;
   grupos: GrupoColor[];
   existingImages: { url: string; color?: string | null }[];
+  portadaPreviewIdx: number;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -42,10 +43,11 @@ interface PreviewData {
 // ─────────────────────────────────────────────────────────────────────────────
 function ProductPreviewCard({
   nombre, precio, precioAnterior, enOferta, stock,
-  tallas, seccion, categoriaNombre, grupos, existingImages,
+  tallas, seccion, categoriaNombre, grupos, existingImages, portadaPreviewIdx,
 }: PreviewData) {
   const [tallaActiva, setTallaActiva] = useState("");
-  const [imgIdx, setImgIdx]           = useState(0);
+  const [imgIdx, setImgIdx]           = useState(portadaPreviewIdx);
+  useEffect(() => { setImgIdx(portadaPreviewIdx); }, [portadaPreviewIdx]);
 
   const allImages = useMemo(() => [
     ...existingImages,
@@ -254,6 +256,11 @@ export default function ProductForm({ categorias, token, producto }: Props) {
       ? producto?.categoria?._id ?? ""
       : producto?.categoria ?? ""
   );
+  const [portadaKey, setPortadaKey] = useState<string>(() => {
+    if (!producto) return "";
+    const p = producto.imagenes.find((i) => i.esPortada);
+    return p ? `existing-${p._id}` : "";
+  });
   const [grupos, setGrupos] = useState<GrupoColor[]>([{ colorHex: "#000000", colorNombre: "", archivos: [], previews: [] }]);
   const fileRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -264,6 +271,23 @@ export default function ProductForm({ categorias, token, producto }: Props) {
     url: imgUrl(img.nombreArchivo),
     color: img.color,
   }));
+
+  const portadaPreviewIdx = useMemo(() => {
+    if (portadaKey.startsWith("existing-")) {
+      const id = portadaKey.slice("existing-".length);
+      const i = (producto?.imagenes ?? []).findIndex((img) => img._id === id);
+      return i >= 0 ? i : 0;
+    }
+    if (portadaKey.startsWith("new-")) {
+      const [, gStr, iStr] = portadaKey.split("-");
+      const tg = parseInt(gStr, 10);
+      const ti = parseInt(iStr, 10);
+      let offset = (producto?.imagenes ?? []).length;
+      for (let gi = 0; gi < tg && gi < grupos.length; gi++) offset += grupos[gi].previews.length;
+      return offset + ti;
+    }
+    return 0;
+  }, [portadaKey, grupos, producto]);
 
   const previewData: PreviewData = {
     nombre: previewNombre,
@@ -276,6 +300,7 @@ export default function ProductForm({ categorias, token, producto }: Props) {
     categoriaNombre: categoriaNombrePreview,
     grupos,
     existingImages,
+    portadaPreviewIdx,
   };
 
   function agregarGrupo() {
@@ -283,6 +308,12 @@ export default function ProductForm({ categorias, token, producto }: Props) {
   }
   function removerGrupo(idx: number) {
     grupos[idx]?.previews.forEach((url) => URL.revokeObjectURL(url));
+    if (portadaKey.startsWith("new-")) {
+      const [, gStr, iStr] = portadaKey.split("-");
+      const pkG = parseInt(gStr, 10);
+      if (pkG === idx) setPortadaKey("");
+      else if (pkG > idx) setPortadaKey(`new-${pkG - 1}-${iStr}`);
+    }
     setGrupos((g) => g.filter((_, i) => i !== idx));
   }
   function handleFiles(idx: number, files: FileList | null) {
@@ -299,6 +330,15 @@ export default function ProductForm({ categorias, token, producto }: Props) {
   }
   function removerImagen(grupoIdx: number, imgIdx: number) {
     URL.revokeObjectURL(grupos[grupoIdx].previews[imgIdx]);
+    if (portadaKey.startsWith("new-")) {
+      const [, gStr, iStr] = portadaKey.split("-");
+      const pkG = parseInt(gStr, 10);
+      const pkI = parseInt(iStr, 10);
+      if (pkG === grupoIdx) {
+        if (pkI === imgIdx) setPortadaKey("");
+        else if (pkI > imgIdx) setPortadaKey(`new-${grupoIdx}-${pkI - 1}`);
+      }
+    }
     setGrupos((g) =>
       g.map((grupo, i) =>
         i === grupoIdx
@@ -323,6 +363,21 @@ export default function ProductForm({ categorias, token, producto }: Props) {
         fd.append("imagenes", archivo);
         fd.append(`color_${idx}`, grupo.colorNombre || grupo.colorHex);
         idx++;
+      }
+    }
+    // Portada selection
+    if (portadaKey.startsWith("existing-")) {
+      fd.append("portadaExistenteId", portadaKey.slice("existing-".length));
+    } else if (portadaKey.startsWith("new-")) {
+      const [, gIdxStr, iIdxStr] = portadaKey.split("-");
+      const tg = parseInt(gIdxStr, 10);
+      const ti = parseInt(iIdxStr, 10);
+      let flatIdx = 0;
+      for (let gi = 0; gi < grupos.length; gi++) {
+        for (let ii = 0; ii < grupos[gi].archivos.length; ii++) {
+          if (gi === tg && ii === ti) fd.append("portadaIdx", String(flatIdx));
+          flatIdx++;
+        }
       }
     }
     try {
@@ -549,42 +604,63 @@ export default function ProductForm({ categorias, token, producto }: Props) {
               <section className="space-y-3">
                 <h3 className={labelCls}>Imágenes actuales</h3>
                 <div className="flex flex-wrap gap-3">
-                  {producto!.imagenes.map((img) => (
-                    <div key={img._id} className="relative">
-                      <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-white/10">
-                        <Image
-                          src={imgUrl(img.nombreArchivo)}
-                          alt=""
-                          fill
-                          className="object-cover"
-                          sizes="80px"
-                        />
-                        {img.esPortada && (
-                          <span className="absolute bottom-0 left-0 right-0 text-[9px] text-center bg-white/80 text-black font-bold py-0.5">
-                            Portada
+                  {producto!.imagenes.map((img) => {
+                    const isPortada = portadaKey === `existing-${img._id}`;
+                    return (
+                      <button
+                        key={img._id}
+                        type="button"
+                        onClick={() => setPortadaKey(`existing-${img._id}`)}
+                        title={isPortada ? "Portada actual" : "Establecer como portada"}
+                        className={[
+                          "relative rounded-xl overflow-hidden shrink-0 transition-all",
+                          isPortada ? "ring-2 ring-amber-400" : "ring-1 ring-white/10 hover:ring-white/40",
+                        ].join(" ")}
+                      >
+                        <div className="relative w-20 h-20">
+                          <Image
+                            src={imgUrl(img.nombreArchivo)}
+                            alt=""
+                            fill
+                            className="object-cover"
+                            sizes="80px"
+                          />
+                          {isPortada && (
+                            <div className="absolute inset-0 bg-black/45 flex items-center justify-center">
+                              <Crown size={16} className="text-amber-400" />
+                            </div>
+                          )}
+                        </div>
+                        {img.color && (
+                          <span className="block text-[10px] text-gray-600 text-center mt-0.5 truncate w-20 px-1">
+                            {img.color}
                           </span>
                         )}
-                      </div>
-                      {img.color && (
-                        <span className="block text-[10px] text-gray-600 text-center mt-0.5 truncate w-20">
-                          {img.color}
-                        </span>
-                      )}
-                    </div>
-                  ))}
+                      </button>
+                    );
+                  })}
                 </div>
-                <p className="text-xs text-gray-700">Para eliminar imágenes usa la edición detallada.</p>
+                <p className="text-[11px] text-gray-600 flex items-center gap-1.5">
+                  <Crown size={9} className="text-amber-500/80" />
+                  Toca una imagen para marcarla como portada
+                </p>
               </section>
             )}
 
             {/* Nuevas imágenes */}
             <section className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className={labelCls}>{isEdit ? "Agregar nuevas imágenes" : "Imágenes"}</h3>
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h3 className={labelCls}>{isEdit ? "Agregar nuevas imágenes" : "Imágenes"}</h3>
+                  <p className="text-[11px] text-gray-700 flex items-center gap-1 -mt-0.5">
+                    <Crown size={9} className="text-amber-600/60" />
+                    Toca para establecer portada
+                  </p>
+                </div>
                 <button
                   type="button"
                   onClick={agregarGrupo}
-                  className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-white border border-white/10 hover:border-white/30 rounded-lg px-3 py-1.5 transition-colors"
+                  className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-white border border-white/10 hover:border-white/30 rounded-lg px-3 py-1.5 transition-colors shrink-0"
                 >
                   <Plus size={12} />
                   Grupo de color
@@ -642,20 +718,37 @@ export default function ProductForm({ categorias, token, producto }: Props) {
 
                     {grupo.previews.length > 0 && (
                       <div className="flex flex-wrap gap-2">
-                        {grupo.previews.map((url, iIdx) => (
-                          <div key={iIdx} className="relative group">
-                            <div className="relative w-16 h-16 rounded-xl overflow-hidden border border-white/10">
-                              <Image src={url} alt="" fill className="object-cover" sizes="64px" unoptimized />
+                        {grupo.previews.map((url, iIdx) => {
+                          const pk = `new-${gIdx}-${iIdx}`;
+                          const isPortada = portadaKey === pk;
+                          return (
+                            <div key={iIdx} className="relative group/img">
+                              <button
+                                type="button"
+                                onClick={() => setPortadaKey(pk)}
+                                title={isPortada ? "Portada seleccionada" : "Marcar como portada"}
+                                className={[
+                                  "relative w-16 h-16 rounded-xl overflow-hidden border-2 transition-all block",
+                                  isPortada ? "border-amber-400" : "border-white/10 hover:border-white/40",
+                                ].join(" ")}
+                              >
+                                <Image src={url} alt="" fill className="object-cover" sizes="64px" unoptimized />
+                                {isPortada && (
+                                  <div className="absolute inset-0 bg-black/45 flex items-center justify-center">
+                                    <Crown size={12} className="text-amber-400" />
+                                  </div>
+                                )}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => removerImagen(gIdx, iIdx)}
+                                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 rounded-full flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity shadow-lg"
+                              >
+                                <Trash2 size={9} className="text-white" />
+                              </button>
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => removerImagen(gIdx, iIdx)}
-                              className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                            >
-                              <Trash2 size={9} className="text-white" />
-                            </button>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
 
