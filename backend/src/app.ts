@@ -12,7 +12,7 @@ import barberRoutes   from './routes/barber.routes';
 import orderRoutes    from './routes/order.routes';
 
 const app = express();
-const PORT = Number(process.env.PORT) || 4000;
+const PORT = Number(process.env.BACKEND_PORT) || 4000;
 
 app.use(helmet());
 

@@ -5,6 +5,9 @@ import type { NextConfig } from "next";
 const backendUrl = process.env.BACKEND_URL ?? "http://localhost:4000";
 
 const nextConfig: NextConfig = {
+  experimental:{
+    viewTransition: true,
+  },
   images: {
     remotePatterns: [
       // Solo necesario en desarrollo local
