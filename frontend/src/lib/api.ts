@@ -1,12 +1,19 @@
 import type { ShopFilters, LoginResponse } from "@/types";
 
 // Servidor (RSC, Server Actions): acceso interno directo al backend
-// Cliente (browser): string vacío → las peticiones van al mismo dominio
-//   y Next.js las redirige al backend vía rewrites en next.config.ts
+// Cliente (browser): "" → las peticiones van al mismo dominio vía rewrites
+// Limpia comillas accidentales: si en Render NEXT_PUBLIC_API_URL se guardó
+// como   ''   o   ""   (con comillas literales), las removemos.
+function cleanUrl(raw: string | undefined, fallback: string): string {
+  if (raw === undefined) return fallback;
+  const trimmed = raw.replace(/^['"`]+|['"`]+$/g, "").trim();
+  return trimmed || fallback;
+}
+
 export const API_URL =
   typeof window === "undefined"
-    ? (process.env.API_URL ?? "http://localhost:4000")
-    : (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000");
+    ? cleanUrl(process.env.API_URL, "http://localhost:4000")
+    : cleanUrl(process.env.NEXT_PUBLIC_API_URL, "");
 
 /** Devuelve la URL completa de un archivo subido al backend */
 export function imgUrl(nombreArchivo: string): string {
