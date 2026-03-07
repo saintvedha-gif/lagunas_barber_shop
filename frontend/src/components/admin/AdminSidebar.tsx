@@ -1,17 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   ShoppingBag,
   Tag,
   Scissors,
   KeyRound,
-  LogOut,
-  ChevronRight,
 } from "lucide-react";
-import { logoutAction } from "@/app/admin/actions";
+import AdminProfileMenu from "./AdminProfileMenu";
 
 const LINKS = [
   { href: "/admin",             label: "Dashboard",   icon: LayoutDashboard },
@@ -23,24 +21,20 @@ const LINKS = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
-  const router = useRouter();
-
-  async function handleLogout() {
-    await logoutAction();
-    router.push("/admin/login");
-    router.refresh();
-  }
 
   return (
     <>
-      {/* Sidebar escritorio */}
+      {/* ── Sidebar desktop ── */}
       <aside className="hidden md:flex flex-col fixed top-0 left-0 h-full w-56 bg-[#111] border-r border-white/10 z-30">
-        {/* Cabecera */}
-        <div className="px-5 py-6 border-b border-white/10">
-          <p className="font-display text-lg tracking-widest text-white">ADMIN</p>
-          <p className="text-gray-500 text-[10px] tracking-widest uppercase mt-0.5">
-            Laguna&apos;s Barber &amp; Shop
-          </p>
+        {/* Cabecera: textos + avatar */}
+        <div className="px-4 py-5 border-b border-white/10 flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <p className="font-display text-lg tracking-widest text-white leading-tight">ADMIN</p>
+            <p className="text-gray-500 text-[9px] tracking-widest uppercase leading-tight truncate">
+              Laguna&apos;s Barber &amp; Shop
+            </p>
+          </div>
+          <AdminProfileMenu />
         </div>
 
         {/* Navegación */}
@@ -61,26 +55,14 @@ export default function AdminSidebar() {
               >
                 <Icon size={16} />
                 {label}
-                {active && <ChevronRight size={14} className="ml-auto" />}
               </Link>
             );
           })}
         </nav>
-
-        {/* Logout */}
-        <div className="px-3 py-4 border-t border-white/10">
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm text-gray-400 hover:text-red-400 hover:bg-red-950/30 transition-colors"
-          >
-            <LogOut size={16} />
-            Cerrar sesión
-          </button>
-        </div>
       </aside>
 
-      {/* Barra móvil inferior */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#111] border-t border-white/10 z-30 flex justify-around">
+      {/* ── Barra móvil: links + avatar a la derecha ── */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#111] border-t border-white/10 z-30 flex items-center justify-around px-1">
         {LINKS.slice(0, 4).map(({ href, label, icon: Icon }) => {
           const active =
             href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
@@ -98,14 +80,12 @@ export default function AdminSidebar() {
             </Link>
           );
         })}
-        <button
-          onClick={handleLogout}
-          className="flex flex-col items-center gap-1 py-3 px-2 text-[10px] text-gray-500 hover:text-red-400 transition-colors"
-        >
-          <LogOut size={18} />
-          Salir
-        </button>
+        {/* Avatar en móvil */}
+        <div className="py-2 px-2">
+          <AdminProfileMenu />
+        </div>
       </nav>
     </>
   );
+}
 }

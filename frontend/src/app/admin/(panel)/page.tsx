@@ -1,6 +1,5 @@
 import { cookies } from "next/headers";
 import Link from "next/link";
-import { Plus, Tag, Scissors } from "lucide-react";
 import { API_URL } from "@/lib/api";
 import type { PaginatedProducts } from "@/types";
 import AdminProductTable from "@/components/admin/AdminProductTable";
@@ -37,30 +36,10 @@ export default async function AdminDashboard({
   return (
     <div className="space-y-6 pb-20 md:pb-6">
       {/* Encabezado */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex items-center justify-between">
         <h1 className="font-display text-3xl tracking-widest text-white">
           DASHBOARD
         </h1>
-        <div className="flex gap-2 flex-wrap">
-          <Link
-            href="/admin/productos/nuevo"
-            className="flex items-center gap-2 bg-white text-black text-xs font-semibold uppercase tracking-wider px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
-          >
-            <Plus size={14} /> Agregar producto
-          </Link>
-          <Link
-            href="/admin/categorias"
-            className="flex items-center gap-2 border border-white/20 text-gray-300 text-xs uppercase tracking-wider px-4 py-2 rounded-lg hover:border-white hover:text-white transition-colors"
-          >
-            <Tag size={14} /> Categorías
-          </Link>
-          <Link
-            href="/admin/barberia"
-            className="flex items-center gap-2 border border-white/20 text-gray-300 text-xs uppercase tracking-wider px-4 py-2 rounded-lg hover:border-white hover:text-white transition-colors"
-          >
-            <Scissors size={14} /> Barbería
-          </Link>
-        </div>
       </div>
 
       {/* Notificación de éxito */}
