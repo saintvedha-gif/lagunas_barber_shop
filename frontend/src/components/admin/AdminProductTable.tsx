@@ -74,6 +74,7 @@ export default function AdminProductTable({ productos, token }: Props) {
                         fill
                         className="object-cover"
                         sizes="36px"
+                        unoptimized
                       />
                     ) : (
                       <div className="w-full h-full bg-[#333]" />

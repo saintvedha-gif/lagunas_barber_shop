@@ -1,10 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import fs from 'fs';
-import path from 'path';
 import { Product, IProductImage } from '../models/Product';
 import { Types } from 'mongoose';
-
-const UPLOADS_DIR = path.join(__dirname, '..', '..', 'uploads');
+import { saveImageToDb, deleteImageFromDb } from '../helpers/image';
 
 // GET /api/products
 export async function getProducts(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -61,13 +58,18 @@ export async function createProduct(req: Request, res: Response, next: NextFunct
 
     const files = (req.files as Express.Multer.File[]) || [];
     const portadaIdx = parseInt(req.body.portadaIdx ?? '0', 10);
-    const imagenes: IProductImage[] = files.map((file, idx) => ({
-      _id:           new Types.ObjectId(),
-      nombreArchivo: file.filename,
-      color:         req.body[`color_${idx}`] || null,
-      esPortada:     idx === portadaIdx,
-      orden:         idx,
-    }));
+    const imagenes: IProductImage[] = [];
+    for (let idx = 0; idx < files.length; idx++) {
+      const file = files[idx];
+      const imgId = await saveImageToDb(file.buffer, file.originalname, file.mimetype);
+      imagenes.push({
+        _id:           new Types.ObjectId(),
+        nombreArchivo: imgId,
+        color:         req.body[`color_${idx}`] || null,
+        esPortada:     idx === portadaIdx,
+        orden:         idx,
+      });
+    }
 
     const producto = await Product.create({
       nombre:         nombre.trim(),
@@ -121,15 +123,17 @@ export async function updateProduct(req: Request, res: Response, next: NextFunct
     const files = (req.files as Express.Multer.File[]) || [];
     const hayPortada = producto.imagenes.some(img => img.esPortada);
     const baseLen = producto.imagenes.length;
-    files.forEach((file, idx) => {
+    for (let idx = 0; idx < files.length; idx++) {
+      const file = files[idx];
+      const imgId = await saveImageToDb(file.buffer, file.originalname, file.mimetype);
       producto.imagenes.push({
         _id:           new Types.ObjectId(),
-        nombreArchivo: file.filename,
+        nombreArchivo: imgId,
         color:         req.body[`color_${idx}`] || null,
         esPortada:     portadaIdx !== null ? idx === portadaIdx : (!hayPortada && idx === 0),
         orden:         baseLen + idx,
       });
-    });
+    }
 
     await producto.save();
     res.json(producto);
@@ -143,8 +147,7 @@ export async function deleteProduct(req: Request, res: Response, next: NextFunct
     if (!producto) { res.status(404).json({ error: 'Producto no encontrado.' }); return; }
 
     for (const img of producto.imagenes) {
-      const ruta = path.join(UPLOADS_DIR, img.nombreArchivo);
-      if (fs.existsSync(ruta)) fs.unlinkSync(ruta);
+      await deleteImageFromDb(img.nombreArchivo);
     }
 
     await producto.deleteOne();
@@ -162,8 +165,7 @@ export async function deleteProductImage(req: Request, res: Response, next: Next
     if (imgIndex === -1) { res.status(404).json({ error: 'Imagen no encontrada.' }); return; }
 
     const img = producto.imagenes[imgIndex];
-    const ruta = path.join(UPLOADS_DIR, img.nombreArchivo);
-    if (fs.existsSync(ruta)) fs.unlinkSync(ruta);
+    await deleteImageFromDb(img.nombreArchivo);
 
     producto.imagenes.splice(imgIndex, 1);
     if (img.esPortada && producto.imagenes.length > 0) producto.imagenes[0].esPortada = true;

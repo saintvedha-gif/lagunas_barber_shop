@@ -65,6 +65,7 @@ function MediaItem({ item }: { item: BarberMedia }) {
           fill
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           className="object-cover grayscale-[40%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-300"
+          unoptimized
         />
       </div>
     );

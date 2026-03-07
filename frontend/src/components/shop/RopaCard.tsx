@@ -99,6 +99,7 @@ export default function RopaCard({ producto }: Props) {
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             className="object-cover transition-transform duration-100"
             draggable={false}
+            unoptimized
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-600 text-xs">
@@ -148,6 +149,7 @@ export default function RopaCard({ producto }: Props) {
                 fill
                 className="object-cover"
                 sizes="40px"
+                unoptimized
               />
             </button>
           ))}

@@ -250,7 +250,7 @@ export default function BarberiaManager({ servicios, media, token }: Props) {
             {media.map((item) => (
               <div key={item._id} className="relative group rounded-xl overflow-hidden bg-brand-card border border-white/10 aspect-square">
                 {item.tipo === "imagen" && item.nombreArchivo && (
-                  <Image src={imgUrl(item.nombreArchivo)} alt={item.descripcion ?? ""} fill className="object-cover" sizes="200px" />
+                  <Image src={imgUrl(item.nombreArchivo)} alt={item.descripcion ?? ""} fill className="object-cover" sizes="200px" unoptimized />
                 )}
                 {item.tipo === "video" && item.nombreArchivo && (
                   <video src={imgUrl(item.nombreArchivo)} className="w-full h-full object-cover" muted loop />

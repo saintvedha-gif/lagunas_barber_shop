@@ -93,7 +93,7 @@ function ProductPreviewCard({
             fill
             sizes="400px"
             className="object-cover transition-opacity duration-300"
-            unoptimized={imgActiva.url.startsWith("blob:")}
+            unoptimized
           />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center text-gray-800 gap-2">
@@ -205,7 +205,7 @@ function ProductPreviewCard({
                   fill
                   className="object-cover"
                   sizes="40px"
-                  unoptimized={img.url.startsWith("blob:")}
+                  unoptimized
                 />
               </button>
             ))}

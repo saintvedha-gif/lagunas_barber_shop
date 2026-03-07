@@ -1,10 +1,8 @@
 import { Request, Response } from 'express';
-import fs from 'fs';
 import path from 'path';
 import { BarberService } from '../models/BarberService';
 import { BarberMedia } from '../models/BarberMedia';
-
-const UPLOADS_DIR = path.join(__dirname, '..', '..', 'uploads');
+import { saveImageToDb, deleteImageFromDb } from '../helpers/image';
 
 // GET /api/barber/services
 export async function getServices(_req: Request, res: Response): Promise<void> {
@@ -86,8 +84,10 @@ export async function createMedia(req: Request, res: Response): Promise<void> {
   const ext  = path.extname(file.originalname).toLowerCase();
   const tipo: 'imagen' | 'video' = ['.mp4', '.webm', '.mov'].includes(ext) ? 'video' : 'imagen';
 
+  const imgId = await saveImageToDb(file.buffer, file.originalname, file.mimetype);
+
   const media = await BarberMedia.create({
-    tipo, nombreArchivo: file.filename, urlVideo: null,
+    tipo, nombreArchivo: imgId, urlVideo: null,
     titulo: titulo?.trim() || null, orden: totalOrden,
   });
   res.status(201).json(media);
@@ -99,8 +99,7 @@ export async function deleteMedia(req: Request, res: Response): Promise<void> {
   if (!media) { res.status(404).json({ error: 'Media no encontrada.' }); return; }
 
   if (media.nombreArchivo) {
-    const ruta = path.join(UPLOADS_DIR, media.nombreArchivo);
-    if (fs.existsSync(ruta)) fs.unlinkSync(ruta);
+    await deleteImageFromDb(media.nombreArchivo);
   }
   res.json({ message: 'Media eliminada.' });
 }
