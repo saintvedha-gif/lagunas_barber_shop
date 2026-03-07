@@ -16,7 +16,6 @@ export default function HomePage() {
         backgroundImage: "url('/img/fondo_barber.jpeg')",
         backgroundSize: "cover",
         backgroundPosition: "center",
-        backgroundAttachment: "fixed",
       }}
     >
       {/* Overlay oscuro */}
