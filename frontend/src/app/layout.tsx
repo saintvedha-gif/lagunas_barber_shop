@@ -3,7 +3,6 @@ import Navbar from "@/components/layout/Navbar"
 import Providers from "@/components/Providers"
 import type { Metadata } from "next"
 import { Bebas_Neue, Roboto } from "next/font/google"
-import { ViewTransition } from "react"
 import "./globals.css"
 
 const bebasNeue = Bebas_Neue({
@@ -35,13 +34,11 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${bebasNeue.variable} ${roboto.variable}`}>
       <body className="antialiased">
-        <ViewTransition>
-          <Providers>
-            <Navbar />
-            <main>{children}</main>
-            <Footer />
-          </Providers>
-        </ViewTransition>
+        <Providers>
+          <Navbar />
+          <main>{children}</main>
+          <Footer />
+        </Providers>
       </body>
     </html>
   )
