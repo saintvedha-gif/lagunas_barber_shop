@@ -1,0 +1,102 @@
+@import "tailwindcss";
+
+/* ── Design tokens del proyecto ──────────────────────────────────────────── */
+@theme inline {
+  /* Fuentes */
+  --font-bebas: var(--font-bebas);
+  --font-roboto: var(--font-roboto);
+
+  /* Paleta base: dark theme */
+  --color-brand-black:   #000000;
+  --color-brand-dark:    #111111;
+  --color-brand-card:    #1a1a1a;
+  --color-brand-border:  #333333;
+  --color-brand-white:   #ffffff;
+  --color-brand-gray:    #aaaaaa;
+  --color-brand-green:   #198754;
+  --color-brand-red:     #dc3545;
+  --color-brand-info:    #0dcaf0;
+
+  /* Redes sociales */
+  --color-tiktok:    #67c2e6;
+  --color-instagram: #e1306c;
+  --color-facebook:  #1877f2;
+  --color-whatsapp:  #25d366;
+}
+
+/* ── Reset base ──────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #000;
+  color: #fff;
+  font-family: var(--font-roboto), Roboto, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Tipografía de display ───────────────────────────────────────────────── */
+.font-display {
+  font-family: var(--font-bebas), "Bebas Neue", sans-serif;
+  letter-spacing: 0.15em;
+}
+
+/* ── Utilidades globales ─────────────────────────────────────────────────── */
+.btn-pill {
+  border-radius: 9999px;
+  padding: 0.6rem 2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+/* ── Navbar scroll effect ────────────────────────────────────────────────── */
+.navbar-scrolled {
+  background-color: rgba(0, 0, 0, 0.95) !important;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Carrito flotante ────────────────────────────────────────────────────── */
+.cart-floating {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 1000;
+  width: 60px;
+  height: 60px;
+  border-radius: 9999px;
+  background: #fff;
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.cart-floating:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Product card zoom ───────────────────────────────────────────────────── */
+.zoom-container {
+  overflow: hidden;
+  cursor: zoom-in;
+}
+.zoom-container img {
+  transition: transform 0.1s ease;
+  transform-origin: center center;
+}
+.zoom-container:hover img {
+  transform: scale(1.8);
+}

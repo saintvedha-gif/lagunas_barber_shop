@@ -188,49 +188,57 @@ En producción usar `process.env.NEXT_PUBLIC_API_URL + '/uploads/' + nombreArchi
 
 ## Plan de fases
 
-### FASE 1 — Scaffolding del proyecto Next.js
-**Objetivo:** tener un proyecto Next.js 15 corriendo con Tailwind y TypeScript.
+### FASE 1 — Scaffolding del proyecto Next.js ✅
+**Objetivo:** tener un proyecto Next.js 16 corriendo con Tailwind y TypeScript.
 
-- [ ] `npx create-next-app@latest frontend --typescript --tailwind --app --src-dir --import-alias "@/*"`
-- [ ] Instalar dependencias: `zustand react-query lucide-react react-hook-form zod`
-- [ ] Configurar `next.config.ts`:
-  - `images.remotePatterns` para el dominio del backend (`localhost:4000`)
-  - `async rewrites()` en desarrollo para no exponer la URL del backend
-- [ ] Crear `.env.local` con `NEXT_PUBLIC_API_URL=http://localhost:4000`
-- [ ] Crear `src/lib/api.ts` — wrapper tipado de fetch con base URL y manejo de errores
-- [ ] Crear `src/types/index.ts` — interfaces Product, Category, BarberService, BarberMedia, Order
-- [ ] Configurar fuentes: `next/font/google` (Bebas Neue + Roboto)
+- [x] `npx create-next-app@latest frontend --typescript --tailwind --app --src-dir --import-alias "@/*"` → **Next.js 16.1.6**
+- [x] Instalar dependencias: `zustand @tanstack/react-query lucide-react react-hook-form zod jose`
+- [x] Configurar `next.config.ts` con `images.remotePatterns` (localhost:4000, railway.app, render.com)
+- [x] Crear `frontend/.env.local` con `NEXT_PUBLIC_API_URL`, `API_URL` y `JWT_SECRET`
+- [x] Crear `src/lib/api.ts` — cliente fetch tipado con helpers para todos los endpoints
+- [x] Crear `src/lib/whatsapp.ts` — helper `enviarPedido()` con formato en español
+- [x] Crear `src/types/index.ts` — interfaces Product, Category, BarberService, BarberMedia, Order, CartItem
+- [x] Crear `src/hooks/useCart.ts` — Zustand store con persistencia en localStorage
+- [x] Crear `src/hooks/useScrolled.ts` — hook para efecto scroll de la navbar
+- [x] Configurar fuentes Bebas Neue + Roboto en `src/app/layout.tsx`
+- [x] Actualizar `src/app/globals.css` con design tokens del proyecto (colores, tipografía)
+- [x] Crear `src/proxy.ts` — protección de rutas `/admin/*` con JWT (⚠️ Next.js 16 usa `proxy.ts` en lugar de `middleware.ts`, y la función debe llamarse `proxy`)
 
-**Entregable:** `http://localhost:3000` con página vacía, fuentes cargadas y Tailwind funcionando.
+> **Nota Next.js 16:** el archivo de proxy/middleware se llama `src/proxy.ts` y debe exportar `export async function proxy(req)` en lugar de `middleware`.
+
+**Entregable:** `npm run build` exitoso sin warnings. Fuentes, tipos y cliente API listos.
 
 ---
 
-### FASE 2 — Layout global y Navbar
+### FASE 2 — Layout global y Navbar ✅
 **Objetivo:** replicar la navbar del PHP con el efecto scroll.
 
-- [ ] Crear `src/components/layout/Navbar.tsx`
+- [x] Crear `src/components/layout/Navbar.tsx`
   - Logo (`next/image` desde `public/img/logo-artguru.png`)
   - Links: Inicio / Ropa / Barbería / Cosméticos
+  - Menú hamburguesa responsivo para móvil
   - Efecto scroll — hook `useScrolled.ts` (reemplaza `main.js`)
-  - Indicador del carrito (badge con count desde Zustand)
-- [ ] Crear `src/app/layout.tsx` con Navbar + fuentes + metadata global
-- [ ] Migrar variables CSS de `base.css` a `tailwind.config.ts` (colores, tipografía)
+  - Indicador del carrito (badge con count desde Zustand) en páginas de tienda
+- [x] Crear `src/components/layout/Footer.tsx` con links, dirección, horario y redes sociales
+- [x] Crear `src/components/Providers.tsx` (React Query `QueryClientProvider`)
+- [x] Actualizar `src/app/layout.tsx` con Navbar + Footer + Providers
+- [x] Mover `logo-artguru.png` y `fondo_barber.jpeg` a `public/img/`
 
 **Entregable:** navbar funcional con scroll effect en todas las páginas.
 
 ---
 
-### FASE 3 — Página de inicio (Hero)
+### FASE 3 — Página de inicio (Hero) ✅
 **Objetivo:** replicar `index.php`.
 
-- [ ] Crear `src/app/page.tsx`
+- [x] Crear `src/app/page.tsx`
   - Hero a pantalla completa con `fondo_barber.jpeg` (`background-attachment: fixed`)
   - Overlay con `rgba(0,0,0,0.75)`
+  - Título con Bebas Neue, letter-spacing
   - 3 botones píldora: Ver Ropa → `/ropa`, Barbería → `/barberia`, Cosméticos → `/cosmeticos`
-  - Texto principal con Bebas Neue, letter-spacing
-- [ ] Mover imágenes estáticas a `frontend/public/img/`
+- [x] Imágenes estáticas en `frontend/public/img/`
 
-**Entregable:** `/` visualmente idéntico al `index.php` actual.
+**Entregable:** `/` visualmente idéntico al `index.php` actual. Servidor en `http://localhost:3000` respondiendo 200.
 
 ---
 
@@ -501,13 +509,13 @@ export function enviarPedido(items: CartItem[]): void {
 
 | Fase | Descripción                        | Estado        |
 |------|------------------------------------|---------------|
-| 1    | Scaffolding Next.js + Tailwind     | ⏳ Pendiente  |
-| 2    | Layout global + Navbar             | ⏳ Pendiente  |
-| 3    | Página de inicio (Hero)            | ⏳ Pendiente  |
+| 1    | Scaffolding Next.js + Tailwind     | ✅ Completado |
+| 2    | Layout global + Navbar             | ✅ Completado |
+| 3    | Página de inicio (Hero)            | ✅ Completado |
 | 4    | Tienda Cosméticos                  | ⏳ Pendiente  |
 | 5    | Tienda Ropa                        | ⏳ Pendiente  |
 | 6    | Página Barbería                    | ⏳ Pendiente  |
 | 7    | Panel de Administración            | ⏳ Pendiente  |
-| 8    | Variables de entorno y config      | ⏳ Pendiente  |
+| 8    | Variables de entorno y config      | ✅ Completado |
 | 9    | Limpieza de archivos PHP           | ⏳ Pendiente  |
 | 10   | Deploy (Vercel + Railway)          | ⏳ Pendiente  |
