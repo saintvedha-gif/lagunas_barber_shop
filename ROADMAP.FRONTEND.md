@@ -385,27 +385,49 @@ En producción usar `process.env.NEXT_PUBLIC_API_URL + '/uploads/' + nombreArchi
 
 ---
 
-### FASE 9 — Limpieza de archivos PHP
-> **Ejecutar solo cuando el frontend Next.js esté 100% validado en producción.**
+### FASE 9 — Limpieza de archivos PHP ✅
 
-- [ ] Eliminar `index.php`, `barberia.php`, `cosmeticos.php`, `ropa.php`
-- [ ] Eliminar carpeta `admin/`
-- [ ] Eliminar `config/conexion.php` y carpeta `config/`
-- [ ] Eliminar `js/cart.js`, `js/cart-ropa.js`, `js/shop-filters.js`, `js/main.js`
-- [ ] Eliminar carpeta `css/`
-- [ ] Mover imágenes de `img/` a `frontend/public/img/`
-- [ ] Actualizar `ROADMAP.md` global
+- [x] Eliminar `index.php`, `barberia.php`, `cosmeticos.php`, `ropa.php`
+- [x] Eliminar carpeta `admin/`
+- [x] Eliminar `config/conexion.php` y carpeta `config/`
+- [x] Eliminar `js/cart.js`, `js/cart-ropa.js`, `js/shop-filters.js`, `js/main.js`
+- [x] Eliminar carpeta `css/`
+- [x] Imágenes de portafolio gestionadas por el backend (`uploads/`)
+- [x] Eliminar `laguna_shop_database.sql` (el proyecto usa MongoDB)
 
 ---
 
-### FASE 10 — Deploy
-- [ ] **Backend:** Railway o Render (ya existente, no modificar)
-- [ ] **Frontend:** Vercel
-  - Conectar repo git → auto-deploy en push a `main`
-  - Variables de entorno en el dashboard de Vercel
-  - Dominio personalizado si aplica
-- [ ] Configurar CORS en el backend (variable `ALLOWED_ORIGINS`) con el dominio de Vercel
-  - El backend ya tiene `ALLOWED_ORIGINS` en `.env` — solo agregar la URL de producción
+### FASE 10 — Deploy en Render (servicio único)
+
+Arquitectura: un solo Web Service en Render arranca el backend (puerto 4000 interno)
+y Next.js (puerto `$PORT` público). Next.js proxea `/api/*` y `/uploads/*`
+al backend mediante rewrites, por lo que el navegador solo habla con un dominio.
+
+#### Pasos
+
+1. **Subir cambios a GitHub** (`git push`)
+2. En [render.com](https://render.com) → **New Web Service** → conectar el repo
+3. Configurar el servicio:
+   | Campo | Valor |
+   |---|---|
+   | **Root Directory** | *(dejar vacío, raíz del repo)* |
+   | **Build Command** | `npm run build` |
+   | **Start Command** | `npm run start` |
+   | **Node Version** | 20 |
+4. Agregar **variables de entorno** en el dashboard de Render:
+
+   | Variable | Valor | Notas |
+   |---|---|---|
+   | `MONGODB_URI` | `mongodb+srv://...` | URI de MongoDB Atlas |
+   | `JWT_SECRET` | `lagunas_barber_...` | Igual al del backend local |
+   | `NEXT_PUBLIC_API_URL` | *(cadena vacía)* | Cliente usa same-domain via rewrites |
+   | `API_URL` | `http://localhost:4000` | Servidor Next.js accede directo al backend |
+   | `BACKEND_URL` | `http://localhost:4000` | Para rewrites en `next.config.ts` |
+   | `ALLOWED_ORIGINS` | `https://tu-app.onrender.com` | CORS en el backend |
+   | `PORT` | | Render lo inyecta automáticamente |
+
+5. Hacer deploy y verificar logs
+6. Cambiar `ALLOWED_ORIGINS` al dominio final si se usa dominio personalizado
 
 ---
 
@@ -512,10 +534,10 @@ export function enviarPedido(items: CartItem[]): void {
 | 1    | Scaffolding Next.js + Tailwind     | ✅ Completado |
 | 2    | Layout global + Navbar             | ✅ Completado |
 | 3    | Página de inicio (Hero)            | ✅ Completado |
-| 4    | Tienda Cosméticos                  | ⏳ Pendiente  |
-| 5    | Tienda Ropa                        | ⏳ Pendiente  |
-| 6    | Página Barbería                    | ⏳ Pendiente  |
-| 7    | Panel de Administración            | ⏳ Pendiente  |
+| 4    | Tienda Cosméticos                  | ✅ Completado |
+| 5    | Tienda Ropa                        | ✅ Completado |
+| 6    | Página Barbería                    | ✅ Completado |
+| 7    | Panel de Administración            | ✅ Completado |
 | 8    | Variables de entorno y config      | ✅ Completado |
-| 9    | Limpieza de archivos PHP           | ⏳ Pendiente  |
-| 10   | Deploy (Vercel + Railway)          | ⏳ Pendiente  |
+| 9    | Limpieza de archivos PHP           | ✅ Completado |
+| 10   | Deploy (Render servicio único)     | ⏳ Pendiente  |

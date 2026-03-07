@@ -1,25 +1,27 @@
 import type { NextConfig } from "next";
 
+// En producción (Render): mismo host → las imágenes llegan vía rewrite,
+// no son URLs remotas. En desarrollo sí son http://localhost:4000/...
+const backendUrl = process.env.BACKEND_URL ?? "http://localhost:4000";
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
+      // Solo necesario en desarrollo local
       {
         protocol: "http",
         hostname: "localhost",
         port: "4000",
         pathname: "/uploads/**",
       },
-      {
-        protocol: "https",
-        hostname: "*.railway.app",
-        pathname: "/uploads/**",
-      },
-      {
-        protocol: "https",
-        hostname: "*.render.com",
-        pathname: "/uploads/**",
-      },
     ],
+  },
+  async rewrites() {
+    return [
+      // Proxy al backend — activo en prod cuando NEXT_PUBLIC_API_URL=""
+      { source: "/api/:path*", destination: `${backendUrl}/api/:path*` },
+      { source: "/uploads/:path*", destination: `${backendUrl}/uploads/:path*` },
+    ];
   },
 };
 

@@ -1,0 +1,11 @@
+{
+  "name": "lagunas-barber-shop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Monorepo: API Node.js (backend/) + Next.js frontend (frontend/)",
+  "scripts": {
+    "build": "npm ci --prefix backend && npm run build --prefix backend && npm ci --prefix frontend && npm run build --prefix frontend",
+    "start": "node backend/dist/app.js & npm run start --prefix frontend",
+    "dev": "npm run dev --prefix backend & npm run dev --prefix frontend"
+  }
+}
