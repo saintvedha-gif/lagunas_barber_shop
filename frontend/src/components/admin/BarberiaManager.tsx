@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Plus, Pencil, Trash2, Check, X, Loader2, Upload, Link2 } from "lucide-react";
-import { barberApi, imgUrl, toYoutubeEmbed } from "@/lib/api";
+import { barberApi, imgUrl, videoUrl, toYoutubeEmbed } from "@/lib/api";
 import type { BarberService, BarberMedia } from "@/types";
 
 interface Props {
@@ -250,10 +250,10 @@ export default function BarberiaManager({ servicios, media, token }: Props) {
             {media.map((item) => (
               <div key={item._id} className="relative group rounded-xl overflow-hidden bg-brand-card border border-white/10 aspect-square">
                 {item.tipo === "imagen" && item.nombreArchivo && (
-                  <Image src={imgUrl(item.nombreArchivo)} alt={item.descripcion ?? ""} fill className="object-cover" sizes="200px" unoptimized />
+                  <Image src={imgUrl(item.nombreArchivo)} alt={item.descripcion ?? ""} fill className="object-cover" sizes="200px" />
                 )}
                 {item.tipo === "video" && item.nombreArchivo && (
-                  <video src={imgUrl(item.nombreArchivo)} className="w-full h-full object-cover" muted loop />
+                  <video src={videoUrl(item.nombreArchivo)} className="w-full h-full object-cover" muted loop />
                 )}
                 {item.tipo === "embed" && item.urlEmbed && (
                   <div className="w-full h-full flex items-center justify-center bg-[#111]">

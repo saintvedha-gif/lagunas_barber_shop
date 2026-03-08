@@ -93,7 +93,7 @@ function ProductPreviewCard({
             fill
             sizes="400px"
             className="object-cover transition-opacity duration-300"
-            unoptimized
+            unoptimized={imgActiva.url.startsWith("blob:")}
           />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center text-gray-800 gap-2">
@@ -205,7 +205,7 @@ function ProductPreviewCard({
                   fill
                   className="object-cover"
                   sizes="40px"
-                  unoptimized
+                  unoptimized={img.url.startsWith("blob:")}
                 />
               </button>
             ))}
@@ -763,7 +763,7 @@ export default function ProductForm({ categorias, token, producto }: Props) {
                                   isPortada ? "border-amber-400" : "border-white/10 hover:border-white/40",
                                 ].join(" ")}
                               >
-                                <Image src={url} alt="" fill className="object-cover" sizes="64px" unoptimized />
+                                <Image src={url} alt="" fill className="object-cover" sizes="64px" unoptimized={url.startsWith("blob:")} />
                                 {isPortada && (
                                   <div className="absolute inset-0 bg-black/45 flex items-center justify-center">
                                     <Crown size={12} className="text-amber-400" />

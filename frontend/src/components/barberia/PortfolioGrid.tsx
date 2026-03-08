@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { imgUrl } from "@/lib/api";
+import { imgUrl, videoUrl } from "@/lib/api";
 import type { BarberMedia } from "@/types";
 
 interface Props {
@@ -44,7 +44,7 @@ function MediaItem({ item }: { item: BarberMedia }) {
     return (
       <div className="relative aspect-square rounded-xl overflow-hidden bg-[#111]">
         <video
-          src={imgUrl(item.nombreArchivo)}
+          src={videoUrl(item.nombreArchivo)}
           className="absolute inset-0 w-full h-full object-cover"
           muted
           loop
@@ -65,7 +65,6 @@ function MediaItem({ item }: { item: BarberMedia }) {
           fill
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           className="object-cover grayscale-[40%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-300"
-          unoptimized
         />
       </div>
     );

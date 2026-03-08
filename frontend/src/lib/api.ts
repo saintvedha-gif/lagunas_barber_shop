@@ -15,11 +15,18 @@ export const API_URL =
     ? cleanUrl(process.env.API_URL, "http://localhost:4000")
     : cleanUrl(process.env.NEXT_PUBLIC_API_URL, "");
 
-/** Devuelve la URL de una imagen almacenada en MongoDB.
- *  nombreArchivo ahora es el _id del documento ImageFile.
- *  Ruta relativa → funciona vía rewrites en producción. */
+/** Cloud name de Cloudinary */
+const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dv7mmbuew";
+
+/** Devuelve la URL de Cloudinary para un public_id dado.
+ *  nombreArchivo ahora es el public_id (ej: "lagunas/products/abc123"). */
 export function imgUrl(nombreArchivo: string): string {
-  return `/api/images/${nombreArchivo}`;
+  return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${nombreArchivo}`;
+}
+
+/** URL de Cloudinary para video */
+export function videoUrl(nombreArchivo: string): string {
+  return `https://res.cloudinary.com/${CLOUD_NAME}/video/upload/${nombreArchivo}`;
 }
 
 /** Convierte una URL de YouTube a su versión embed */

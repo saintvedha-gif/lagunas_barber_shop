@@ -103,7 +103,6 @@ export default function CartDrawer({ abierto, onCerrar }: Props) {
                       fill
                       className="object-cover"
                       sizes="64px"
-                      unoptimized
                     />
                   ) : (
                     <div className="w-full h-full bg-[#222]" />

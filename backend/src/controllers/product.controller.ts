@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { Product, IProductImage } from '../models/Product';
 import { Types } from 'mongoose';
-import { saveImageToDb, deleteImageFromDb } from '../helpers/image';
+import { uploadToCloudinary, deleteFromCloudinary } from '../helpers/image';
 
 // GET /api/products
 export async function getProducts(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -57,16 +57,14 @@ export async function createProduct(req: Request, res: Response, next: NextFunct
     }
 
     const files = (req.files as Express.Multer.File[]) || [];
-    console.log('[createProduct] files recibidos:', files.length, files.map(f => ({ name: f.originalname, size: f.size, mime: f.mimetype, hasBuffer: !!f.buffer })));
     const portadaIdx = parseInt(req.body.portadaIdx ?? '0', 10);
     const imagenes: IProductImage[] = [];
     for (let idx = 0; idx < files.length; idx++) {
       const file = files[idx];
-      console.log('[createProduct] Guardando imagen', idx, file.originalname);
-      const imgId = await saveImageToDb(file.buffer, file.originalname, file.mimetype);
+      const { publicId } = await uploadToCloudinary(file.buffer, 'products');
       imagenes.push({
         _id:           new Types.ObjectId(),
-        nombreArchivo: imgId,
+        nombreArchivo: publicId,
         color:         req.body[`color_${idx}`] || null,
         esPortada:     idx === portadaIdx,
         orden:         idx,
@@ -127,10 +125,10 @@ export async function updateProduct(req: Request, res: Response, next: NextFunct
     const baseLen = producto.imagenes.length;
     for (let idx = 0; idx < files.length; idx++) {
       const file = files[idx];
-      const imgId = await saveImageToDb(file.buffer, file.originalname, file.mimetype);
+      const { publicId } = await uploadToCloudinary(file.buffer, 'products');
       producto.imagenes.push({
         _id:           new Types.ObjectId(),
-        nombreArchivo: imgId,
+        nombreArchivo: publicId,
         color:         req.body[`color_${idx}`] || null,
         esPortada:     portadaIdx !== null ? idx === portadaIdx : (!hayPortada && idx === 0),
         orden:         baseLen + idx,
@@ -149,7 +147,7 @@ export async function deleteProduct(req: Request, res: Response, next: NextFunct
     if (!producto) { res.status(404).json({ error: 'Producto no encontrado.' }); return; }
 
     for (const img of producto.imagenes) {
-      await deleteImageFromDb(img.nombreArchivo);
+      await deleteFromCloudinary(img.nombreArchivo);
     }
 
     await producto.deleteOne();
@@ -167,7 +165,7 @@ export async function deleteProductImage(req: Request, res: Response, next: Next
     if (imgIndex === -1) { res.status(404).json({ error: 'Imagen no encontrada.' }); return; }
 
     const img = producto.imagenes[imgIndex];
-    await deleteImageFromDb(img.nombreArchivo);
+    await deleteFromCloudinary(img.nombreArchivo);
 
     producto.imagenes.splice(imgIndex, 1);
     if (img.esPortada && producto.imagenes.length > 0) producto.imagenes[0].esPortada = true;

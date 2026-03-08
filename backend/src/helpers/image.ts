@@ -1,55 +1,36 @@
-import sharp from 'sharp';
-import { ImageFile } from '../models/ImageFile';
-
-const MAX_WIDTH  = 1200;
-const MAX_HEIGHT = 1200;
-const QUALITY    = 80;
+import cloudinary from '../config/cloudinary';
 
 /**
- * Procesa un buffer de imagen (redimensiona + webp) y lo guarda en MongoDB.
- * Retorna el _id como string (será el "nombreArchivo" en Product.imagenes).
+ * Sube un buffer a Cloudinary dentro de la carpeta `lagunas/`.
+ * Retorna el public_id (ej: "lagunas/products/abc123").
  */
-export async function saveImageToDb(
+export async function uploadToCloudinary(
   buffer: Buffer,
-  originalName: string,
-  mimeType: string,
-): Promise<string> {
-  console.log('[saveImageToDb] Inicio:', { originalName, mimeType, bufferSize: buffer.length });
-
-  // Videos: guardar tal cual sin procesar con sharp
-  if (mimeType.startsWith('video/')) {
-    const doc = await ImageFile.create({
-      data: buffer,
-      contentType: mimeType,
-      originalName,
-      size: buffer.length,
-    });
-    console.log('[saveImageToDb] Video guardado, _id:', String(doc._id));
-    return String(doc._id);
-  }
-
-  // Imágenes: optimizar con sharp → webp
-  console.log('[saveImageToDb] Procesando con sharp...');
-  const optimized = await sharp(buffer)
-    .resize(MAX_WIDTH, MAX_HEIGHT, { fit: 'inside', withoutEnlargement: true })
-    .webp({ quality: QUALITY })
-    .toBuffer();
-  console.log('[saveImageToDb] Sharp OK, tamaño optimizado:', optimized.length);
-
-  const doc = await ImageFile.create({
-    data: optimized,
-    contentType: 'image/webp',
-    originalName,
-    size: optimized.length,
+  folder: string,         // ej: "products", "barber"
+  resourceType: 'image' | 'video' = 'image',
+): Promise<{ publicId: string; url: string }> {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: `lagunas/${folder}`,
+        resource_type: resourceType,
+        // Cloudinary optimiza automáticamente (formato, calidad)
+      },
+      (error, result) => {
+        if (error || !result) return reject(error ?? new Error('Upload falló'));
+        resolve({ publicId: result.public_id, url: result.secure_url });
+      },
+    );
+    stream.end(buffer);
   });
-  console.log('[saveImageToDb] Guardado en MongoDB, _id:', String(doc._id));
-
-  return String(doc._id);
 }
 
 /**
- * Elimina una imagen de MongoDB por su _id.
+ * Elimina un recurso de Cloudinary por su public_id.
  */
-export async function deleteImageFromDb(id: string): Promise<void> {
-  await ImageFile.findByIdAndDelete(id);
+export async function deleteFromCloudinary(
+  publicId: string,
+  resourceType: 'image' | 'video' = 'image',
+): Promise<void> {
+  await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
 }
