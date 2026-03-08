@@ -18,10 +18,19 @@ export async function createService(req: Request, res: Response): Promise<void> 
     return;
   }
   const totalOrden = await BarberService.countDocuments();
+
+  let imagen: string | null = null;
+  const file = req.file;
+  if (file) {
+    const { publicId } = await uploadToCloudinary(file.buffer, 'services');
+    imagen = publicId;
+  }
+
   const servicio = await BarberService.create({
     nombre: nombre.trim(),
     precio: parseFloat(precio),
     descripcion: descripcion?.trim() || null,
+    imagen,
     orden: totalOrden,
   });
   res.status(201).json(servicio);
@@ -30,13 +39,25 @@ export async function createService(req: Request, res: Response): Promise<void> 
 // PUT /api/barber/services/:id
 export async function updateService(req: Request, res: Response): Promise<void> {
   const { nombre, precio, descripcion } = req.body as Record<string, string>;
+
+  const updateData: Record<string, unknown> = {
+    ...(nombre && { nombre: nombre.trim() }),
+    ...(precio !== undefined && { precio: parseFloat(precio) }),
+    ...(descripcion !== undefined && { descripcion: descripcion.trim() || null }),
+  };
+
+  const file = req.file;
+  if (file) {
+    // Borrar imagen anterior si existe
+    const existing = await BarberService.findById(req.params['id']);
+    if (existing?.imagen) await deleteFromCloudinary(existing.imagen);
+    const { publicId } = await uploadToCloudinary(file.buffer, 'services');
+    updateData.imagen = publicId;
+  }
+
   const servicio = await BarberService.findByIdAndUpdate(
     req.params['id'],
-    {
-      ...(nombre && { nombre: nombre.trim() }),
-      ...(precio !== undefined && { precio: parseFloat(precio) }),
-      ...(descripcion !== undefined && { descripcion: descripcion.trim() || null }),
-    },
+    updateData,
     { new: true }
   );
   if (!servicio) { res.status(404).json({ error: 'Servicio no encontrado.' }); return; }
@@ -47,6 +68,7 @@ export async function updateService(req: Request, res: Response): Promise<void> 
 export async function deleteService(req: Request, res: Response): Promise<void> {
   const servicio = await BarberService.findByIdAndDelete(req.params['id']);
   if (!servicio) { res.status(404).json({ error: 'Servicio no encontrado.' }); return; }
+  if (servicio.imagen) await deleteFromCloudinary(servicio.imagen);
   res.json({ message: 'Servicio eliminado.' });
 }
 

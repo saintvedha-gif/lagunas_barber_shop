@@ -147,25 +147,18 @@ export const barberApi = {
   getServices: () =>
     fetch(`${API_URL}/api/barber/services`, { next: { revalidate: 60 } }),
 
-  createService: (
-    body: { nombre: string; precio: number; descripcion?: string },
-    token: string
-  ) =>
+  createService: (formData: FormData, token: string) =>
     fetch(`${API_URL}/api/barber/services`, {
       method: "POST",
-      headers: authHeaders(token),
-      body: JSON.stringify(body),
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
     }),
 
-  updateService: (
-    id: string,
-    body: { nombre?: string; precio?: number; descripcion?: string },
-    token: string
-  ) =>
+  updateService: (id: string, formData: FormData, token: string) =>
     fetch(`${API_URL}/api/barber/services/${id}`, {
       method: "PUT",
-      headers: authHeaders(token),
-      body: JSON.stringify(body),
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
     }),
 
   deleteService: (id: string, token: string) =>

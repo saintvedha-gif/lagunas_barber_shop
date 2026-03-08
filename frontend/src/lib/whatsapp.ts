@@ -1,4 +1,4 @@
-import type { CartItem } from "@/types";
+import type { CartItem, BarberService } from "@/types";
 
 const TELEFONO_FALLBACK = "573028326617";
 
@@ -14,17 +14,16 @@ export async function fetchTelefono(): Promise<string> {
   }
 }
 
+/** Abre WhatsApp con mensaje de pedido de productos del carrito */
 export function enviarPedido(items: CartItem[], telefono = TELEFONO_FALLBACK): void {
   const lineas = items.map((i) => {
-    const variantes = [
-      i.talla ? `Talla: ${i.talla}` : "",
-      i.color ? `Color: ${i.color}` : "",
-    ]
-      .filter(Boolean)
-      .join(" | ");
+    const variantes: string[] = [];
+    if (i.talla) variantes.push(`Talla: ${i.talla}`);
+    if (i.color) variantes.push(`Color: ${i.color}`);
+    const detalle = variantes.length ? ` _(${variantes.join(", ")})_` : "";
 
     const subtotal = (i.precio * i.cantidad).toLocaleString("es-CO");
-    return `▪ ${i.nombre}${variantes ? ` | ${variantes}` : ""} × ${i.cantidad} — $${subtotal}`;
+    return `🛒 *${i.nombre}*${detalle}\n   × ${i.cantidad} — *$${subtotal}*`;
   });
 
   const total = items
@@ -32,12 +31,37 @@ export function enviarPedido(items: CartItem[], telefono = TELEFONO_FALLBACK): v
     .toLocaleString("es-CO");
 
   const mensaje = [
-    "🛍️ *Pedido Laguna's Barber & Shop*",
+    "🛍️ *¡Hola Laguna's Barber & Shop!*",
+    "",
+    "Estoy interesado en los siguientes productos:",
     "",
     ...lineas,
     "",
-    `*Total: $${total}*`,
+    `💰 *Total: $${total}*`,
+    "",
+    "¿Están disponibles? 🙏",
   ].join("\n");
+
+  window.open(
+    `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`,
+    "_blank"
+  );
+}
+
+/** Abre WhatsApp con mensaje de reserva de un servicio de barbería */
+export function reservarServicio(servicio: BarberService, telefono = TELEFONO_FALLBACK): void {
+  const precio = servicio.precio.toLocaleString("es-CO");
+
+  const mensaje = [
+    "💈 *¡Hola Laguna's Barber & Shop!*",
+    "",
+    `Quiero reservar el servicio:`,
+    "",
+    `✂️ *${servicio.nombre}* — *$${precio}*`,
+    servicio.descripcion ? `📝 ${servicio.descripcion}` : "",
+    "",
+    "¿Tienen disponibilidad? 📅",
+  ].filter(Boolean).join("\n");
 
   window.open(
     `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`,

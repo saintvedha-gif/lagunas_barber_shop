@@ -22,17 +22,23 @@ export default function BarberiaManager({ servicios, media, token }: Props) {
   const [nuevoSrv, setNuevoSrv]  = useState({ nombre: "", precio: "", descripcion: "" });
   const [loadingSrv, setLoadingSrv] = useState<string | null>(null);
   const [errorSrv, setErrorSrv]  = useState("");
+  const srvFileRef = useRef<HTMLInputElement>(null);
+  const editSrvFileRef = useRef<HTMLInputElement>(null);
 
   async function crearServicio() {
     if (!nuevoSrv.nombre.trim() || !nuevoSrv.precio) return;
     setLoadingSrv("crear"); setErrorSrv("");
     try {
-      const res = await barberApi.createService(
-        { nombre: nuevoSrv.nombre.trim(), precio: parseFloat(nuevoSrv.precio), descripcion: nuevoSrv.descripcion || undefined },
-        token
-      );
+      const fd = new FormData();
+      fd.append("nombre", nuevoSrv.nombre.trim());
+      fd.append("precio", nuevoSrv.precio);
+      if (nuevoSrv.descripcion) fd.append("descripcion", nuevoSrv.descripcion);
+      const file = srvFileRef.current?.files?.[0];
+      if (file) fd.append("imagen", file);
+      const res = await barberApi.createService(fd, token);
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "Error");
       setNuevoSrv({ nombre: "", precio: "", descripcion: "" });
+      if (srvFileRef.current) srvFileRef.current.value = "";
       router.refresh();
     } catch (e: unknown) { setErrorSrv(e instanceof Error ? e.message : "Error."); }
     finally { setLoadingSrv(null); }
@@ -42,11 +48,13 @@ export default function BarberiaManager({ servicios, media, token }: Props) {
     if (!editSrv) return;
     setLoadingSrv(`edit-${editSrv._id}`); setErrorSrv("");
     try {
-      const res = await barberApi.updateService(editSrv._id, {
-        nombre: editSrv.nombre.trim(),
-        precio: editSrv.precio,
-        descripcion: editSrv.descripcion || undefined,
-      }, token);
+      const fd = new FormData();
+      fd.append("nombre", editSrv.nombre.trim());
+      fd.append("precio", String(editSrv.precio));
+      fd.append("descripcion", editSrv.descripcion || "");
+      const file = editSrvFileRef.current?.files?.[0];
+      if (file) fd.append("imagen", file);
+      const res = await barberApi.updateService(editSrv._id, fd, token);
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "Error");
       setEditSrv(null);
       router.refresh();
@@ -169,6 +177,10 @@ export default function BarberiaManager({ servicios, media, token }: Props) {
                         {loadingSrv === `edit-${srv._id}` ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
                         Guardar
                       </button>
+                      <label className="flex items-center gap-1 text-xs text-gray-400 hover:text-white cursor-pointer px-2 transition-colors">
+                        <Upload size={12} /> Imagen
+                        <input ref={editSrvFileRef} type="file" accept="image/*" className="hidden" />
+                      </label>
                       <button onClick={() => setEditSrv(null)} className="text-gray-500 hover:text-white text-xs px-2">
                         <X size={12} />
                       </button>
@@ -176,6 +188,11 @@ export default function BarberiaManager({ servicios, media, token }: Props) {
                   </div>
                 ) : (
                   <div className="flex items-center gap-3">
+                    {srv.imagen && (
+                      <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-[#222]">
+                        <Image src={imgUrl(srv.imagen)} alt="" fill className="object-cover" sizes="40px" />
+                      </div>
+                    )}
                     <div className="flex-1">
                       <p className="text-white text-sm font-medium">{srv.nombre}</p>
                       {srv.descripcion && <p className="text-gray-500 text-xs mt-0.5">{srv.descripcion}</p>}
@@ -224,6 +241,10 @@ export default function BarberiaManager({ servicios, media, token }: Props) {
                 className="flex-1 bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-white/40"
               />
             </div>
+            <label className="flex items-center gap-2 text-xs text-gray-400 hover:text-white cursor-pointer transition-colors">
+              <Upload size={12} /> Imagen del servicio (opcional)
+              <input ref={srvFileRef} type="file" accept="image/*" className="hidden" />
+            </label>
             <button
               onClick={crearServicio}
               disabled={!nuevoSrv.nombre.trim() || !nuevoSrv.precio || loadingSrv === "crear"}

@@ -45,6 +45,7 @@ export interface BarberService {
   nombre: string;
   precio: number;
   descripcion?: string | null;
+  imagen?: string | null;
   activo: boolean;
   orden: number;
 }

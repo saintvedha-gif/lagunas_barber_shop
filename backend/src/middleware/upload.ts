@@ -34,6 +34,12 @@ export const uploadProductImages = multer({
   limits: { fileSize: MAX_IMAGE_SIZE, files: 20 },
 }).array('imagenes', 20);
 
+export const uploadServiceImage = multer({
+  storage,
+  fileFilter: imageFilter,
+  limits: { fileSize: MAX_IMAGE_SIZE, files: 1 },
+}).single('imagen');
+
 export const uploadBarberMedia = multer({
   storage,
   fileFilter: mediaFilter,

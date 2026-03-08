@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth';
-import { uploadBarberMedia } from '../middleware/upload';
+import { uploadBarberMedia, uploadServiceImage } from '../middleware/upload';
 import {
   getServices, createService, updateService, deleteService,
   getMedia, createMedia, deleteMedia,
@@ -9,8 +9,18 @@ import {
 const router = Router();
 
 router.get('/services',        getServices);
-router.post('/services',       requireAuth, createService);
-router.put('/services/:id',    requireAuth, updateService);
+router.post('/services',       requireAuth, (req, res, next) => {
+  uploadServiceImage(req, res, (err) => {
+    if (err) { res.status(400).json({ error: (err as Error).message }); return; }
+    next();
+  });
+}, createService);
+router.put('/services/:id',    requireAuth, (req, res, next) => {
+  uploadServiceImage(req, res, (err) => {
+    if (err) { res.status(400).json({ error: (err as Error).message }); return; }
+    next();
+  });
+}, updateService);
 router.delete('/services/:id', requireAuth, deleteService);
 
 router.get('/media',           getMedia);
