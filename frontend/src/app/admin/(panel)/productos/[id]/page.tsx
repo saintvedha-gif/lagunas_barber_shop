@@ -1,26 +1,28 @@
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { API_URL } from "@/lib/api";
-import type { Category, Product } from "@/types";
+import type { Category, Color, Product } from "@/types";
 import ProductForm from "@/components/admin/ProductForm";
 
 export const dynamic = "force-dynamic";
 
 async function fetchData(id: string, token: string) {
-  const [prodRes, catRes] = await Promise.all([
+  const [prodRes, catRes, colRes] = await Promise.all([
     fetch(`${API_URL}/api/products/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     }),
     fetch(`${API_URL}/api/categories`, {
       headers: { Authorization: `Bearer ${token}` },
     }),
+    fetch(`${API_URL}/api/colors`, { next: { revalidate: 60 } }),
   ]);
 
   if (!prodRes.ok) return null;
 
   const producto: Product  = await prodRes.json();
   const categorias: Category[] = catRes.ok ? await catRes.json() : [];
-  return { producto, categorias };
+  const coloresDB: Color[] = colRes.ok ? await colRes.json() : [];
+  return { producto, categorias, coloresDB };
 }
 
 export default async function EditarProductoPage({
@@ -43,6 +45,7 @@ export default async function EditarProductoPage({
       </div>
       <ProductForm
         categorias={data.categorias}
+        coloresDB={data.coloresDB}
         token={token}
         producto={data.producto}
       />

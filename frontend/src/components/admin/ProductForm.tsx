@@ -6,13 +6,14 @@ import Image from "next/image";
 import {
   Plus, Trash2, Loader2, ShoppingCart,
   AlertTriangle, ImageIcon, Tag, Package,
-  Eye, FileText, Pipette, Crown,
+  Eye, FileText, Crown,
 } from "lucide-react";
 import { imgUrl, productsApi } from "@/lib/api";
-import type { Category, Product } from "@/types";
+import type { Category, Color, Product } from "@/types";
 
 interface Props {
   categorias: Category[];
+  coloresDB: Color[];
   token: string;
   producto?: Product;
 }
@@ -36,6 +37,7 @@ interface PreviewData {
   grupos: GrupoColor[];
   existingImages: { url: string; color?: string | null }[];
   portadaPreviewIdx: number;
+  colorMap: Record<string, string>;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -43,7 +45,7 @@ interface PreviewData {
 // ─────────────────────────────────────────────────────────────────────────────
 function ProductPreviewCard({
   nombre, precio, precioAnterior, enOferta, stock,
-  tallas, seccion, categoriaNombre, grupos, existingImages, portadaPreviewIdx,
+  tallas, seccion, categoriaNombre, grupos, existingImages, portadaPreviewIdx, colorMap,
 }: PreviewData) {
   const [tallaActiva, setTallaActiva] = useState("");
   const [imgIdx, setImgIdx]           = useState(portadaPreviewIdx);
@@ -67,11 +69,11 @@ function ProductPreviewCard({
     existingImages.forEach((i) => {
       if (i.color && !seen.has(i.color)) {
         seen.add(i.color);
-        list.push({ label: i.color, hex: i.color.startsWith("#") ? i.color : "" });
+        list.push({ label: i.color, hex: colorMap[i.color] ?? "" });
       }
     });
     return list;
-  }, [grupos, existingImages]);
+  }, [grupos, existingImages, colorMap]);
 
   const safeIdx   = Math.min(imgIdx, Math.max(allImages.length - 1, 0));
   const imgActiva = allImages[safeIdx] ?? null;
@@ -237,7 +239,7 @@ function ProductPreviewCard({
 // ─────────────────────────────────────────────────────────────────────────────
 // ProductForm — main component
 // ─────────────────────────────────────────────────────────────────────────────
-export default function ProductForm({ categorias, token, producto }: Props) {
+export default function ProductForm({ categorias, coloresDB, token, producto }: Props) {
   const router = useRouter();
   const isEdit = !!producto;
 
@@ -291,6 +293,12 @@ export default function ProductForm({ categorias, token, producto }: Props) {
     return 0;
   }, [portadaKey, grupos, imgActuales]);
 
+  const colorMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    coloresDB.forEach((c) => { map[c.nombre] = c.hex; });
+    return map;
+  }, [coloresDB]);
+
   const previewData: PreviewData = {
     nombre: previewNombre,
     precio: previewPrecio,
@@ -303,6 +311,7 @@ export default function ProductForm({ categorias, token, producto }: Props) {
     grupos,
     existingImages,
     portadaPreviewIdx,
+    colorMap,
   };
 
   async function eliminarImagenExistente(imgId: string) {
@@ -381,6 +390,14 @@ export default function ProductForm({ categorias, token, producto }: Props) {
         fd.append(`color_${idx}`, grupo.colorNombre || grupo.colorHex);
         idx++;
       }
+    }
+    // Colores del producto (nombres únicos)
+    const colorNames = grupos
+      .map((g) => g.colorNombre)
+      .filter(Boolean)
+      .filter((v, i, a) => a.indexOf(v) === i);
+    if (colorNames.length > 0) {
+      fd.append("colores", colorNames.join(","));
     }
     // Portada selection
     if (portadaKey.startsWith("existing-")) {
@@ -702,40 +719,32 @@ export default function ProductForm({ categorias, token, producto }: Props) {
                 {grupos.map((grupo, gIdx) => (
                   <div key={gIdx} className="border border-white/8 rounded-2xl p-4 space-y-3 bg-[#111]">
                     <div className="flex items-center gap-2">
-                      {/* Círculo = color picker — click para elegir */}
-                      <label
-                        className="cursor-pointer shrink-0 relative group/cpicker"
-                        title="Elegir color"
-                      >
-                        <div
-                          className="w-8 h-8 rounded-full border-2 border-white/25 transition-all group-hover/cpicker:scale-110 group-hover/cpicker:border-white/60"
-                          style={{ backgroundColor: grupo.colorHex || "#1a1a1a" }}
-                        />
-                        <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-[#222] border border-white/20 rounded-full flex items-center justify-center pointer-events-none">
-                          <Pipette size={8} className="text-gray-300" />
-                        </span>
-                        <input
-                          type="color"
-                          value={grupo.colorHex || "#000000"}
-                          onChange={(e) => {
-                            const hex = e.target.value;
-                            setGrupos((g) =>
-                              g.map((gr, i) =>
-                                i === gIdx ? { ...gr, colorHex: hex, colorNombre: hex } : gr
-                              )
-                            );
-                          }}
-                          className="sr-only"
-                        />
-                      </label>
-                      <input
-                        placeholder="Nombre del color (ej. Negro, Azul marino)"
-                        value={grupo.colorNombre}
-                        onChange={(e) =>
-                          setGrupos((g) => g.map((gr, i) => (i === gIdx ? { ...gr, colorNombre: e.target.value } : gr)))
-                        }
-                        className="flex-1 bg-transparent border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs focus:outline-none focus:border-white/40 transition-colors placeholder:text-gray-700"
+                      {/* Swatch del color seleccionado */}
+                      <div
+                        className="w-8 h-8 rounded-full border-2 border-white/25 shrink-0"
+                        style={{ backgroundColor: grupo.colorHex || "#1a1a1a" }}
                       />
+                      <select
+                        value={grupo.colorNombre}
+                        onChange={(e) => {
+                          const sel = coloresDB.find((c) => c.nombre === e.target.value);
+                          setGrupos((g) =>
+                            g.map((gr, i) =>
+                              i === gIdx
+                                ? { ...gr, colorNombre: sel?.nombre ?? "", colorHex: sel?.hex ?? "#000000" }
+                                : gr
+                            )
+                          );
+                        }}
+                        className="flex-1 bg-transparent border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs focus:outline-none focus:border-white/40 transition-colors [&>option]:bg-[#1a1a1a] [&>option]:text-white"
+                      >
+                        <option value="">Seleccionar color…</option>
+                        {coloresDB.map((c) => (
+                          <option key={c._id} value={c.nombre}>
+                            {c.nombre}
+                          </option>
+                        ))}
+                      </select>
                       {grupos.length > 1 && (
                         <button
                           type="button"

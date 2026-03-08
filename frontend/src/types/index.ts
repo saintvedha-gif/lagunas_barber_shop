@@ -12,6 +12,13 @@ export interface Category {
   totalProductos?: number;
 }
 
+// ─── Color ────────────────────────────────────────────────────────────────────
+export interface Color {
+  _id: string;
+  nombre: string;
+  hex: string;
+}
+
 // ─── Producto ─────────────────────────────────────────────────────────────────
 export interface ProductImage {
   _id: string;

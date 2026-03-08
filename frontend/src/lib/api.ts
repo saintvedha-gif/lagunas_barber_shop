@@ -96,6 +96,32 @@ export const productsApi = {
     }),
 };
 
+// ─── Colores ──────────────────────────────────────────────────────────────────
+export const colorsApi = {
+  list: () =>
+    fetch(`${API_URL}/api/colors`, { next: { revalidate: 60 } }),
+
+  create: (body: { nombre: string; hex: string }, token: string) =>
+    fetch(`${API_URL}/api/colors`, {
+      method: "POST",
+      headers: authHeaders(token),
+      body: JSON.stringify(body),
+    }),
+
+  update: (id: string, body: { nombre?: string; hex?: string }, token: string) =>
+    fetch(`${API_URL}/api/colors/${id}`, {
+      method: "PUT",
+      headers: authHeaders(token),
+      body: JSON.stringify(body),
+    }),
+
+  delete: (id: string, token: string) =>
+    fetch(`${API_URL}/api/colors/${id}`, {
+      method: "DELETE",
+      headers: authHeaders(token),
+    }),
+};
+
 // ─── Categorías ───────────────────────────────────────────────────────────────
 export const categoriesApi = {
   list: (seccion?: "ropa" | "cosmetico") => {
