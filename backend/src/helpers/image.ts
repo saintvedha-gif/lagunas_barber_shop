@@ -27,10 +27,15 @@ export async function uploadToCloudinary(
 
 /**
  * Elimina un recurso de Cloudinary por su public_id.
+ * No lanza error si el recurso no existe (ej: IDs legacy de MongoDB).
  */
 export async function deleteFromCloudinary(
   publicId: string,
   resourceType: 'image' | 'video' = 'image',
 ): Promise<void> {
-  await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+  try {
+    await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+  } catch {
+    // Ignorar — el recurso puede no existir en Cloudinary (datos legacy)
+  }
 }
