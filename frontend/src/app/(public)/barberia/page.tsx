@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { MessageCircle, MapPin, Clock, Instagram, Facebook } from "lucide-react";
 import { API_URL } from "@/lib/api";
 import type { BarberService, BarberMedia } from "@/types";
-import PricingCard from "@/components/barberia/PricingCard";
+import ServicioCard from "@/components/barberia/ServicioCard";
 import PortfolioGrid from "@/components/barberia/PortfolioGrid";
 
 export const dynamic = "force-dynamic";
@@ -33,7 +33,7 @@ export default async function BarberíaPage() {
 
   return (
     <div className="min-h-screen bg-black pt-20">
-      <div className="max-w-5xl mx-auto px-4 py-10 space-y-14">
+      <div className="max-w-7xl mx-auto px-4 py-8 space-y-14">
 
         {/* Encabezado */}
         <div>
@@ -41,12 +41,20 @@ export default async function BarberíaPage() {
             BARBERÍA
           </h1>
           <p className="text-gray-400 mt-2 text-sm">
-            Cortes profesionales con estilo y precisión
+            {servicios.length} servicio{servicios.length !== 1 ? "s" : ""} disponible{servicios.length !== 1 ? "s" : ""}
           </p>
         </div>
 
-        {/* Precios */}
-        <PricingCard servicios={servicios} />
+        {/* Grid de servicios */}
+        {servicios.length === 0 ? (
+          <p className="text-gray-500 text-sm">No hay servicios disponibles por el momento.</p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {servicios.map((s) => (
+              <ServicioCard key={s._id} servicio={s} />
+            ))}
+          </div>
+        )}
 
         {/* Portafolio */}
         <PortfolioGrid media={media} />
