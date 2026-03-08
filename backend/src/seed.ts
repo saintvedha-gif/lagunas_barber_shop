@@ -381,7 +381,7 @@ async function seed(): Promise<void> {
           imagenes.push({
             _id:           new Types.ObjectId(),
             nombreArchivo: publicId,
-            color:         null,
+            color:         undefined,
             esPortada:     true,
             orden:         0,
           });
