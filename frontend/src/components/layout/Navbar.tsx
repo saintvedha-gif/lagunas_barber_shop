@@ -125,10 +125,10 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* FAB hamburguesa — sólo móvil, flotante en esquina inferior-derecha */}
+      {/* FAB hamburguesa — sólo móvil, flotante en esquina inferior-izquierda */}
       <button
         className={[
-          "md:hidden fixed bottom-6 right-5 z-50",
+          "md:hidden fixed bottom-6 left-5 z-50",
           "w-14 h-14 rounded-full",
           "flex items-center justify-center",
           "transition-all duration-300 ease-out",

@@ -9,9 +9,11 @@ export default function CartButton() {
   const [abierto, setAbierto] = useState(false);
   const count = useCart((s) => s.count());
 
+  if (count === 0 && !abierto) return null;
+
   return (
     <>
-      {/* Botón flotante */}
+      {/* Botón flotante — solo visible con items en el carrito */}
       <button
         onClick={() => setAbierto(true)}
         aria-label="Abrir carrito"
